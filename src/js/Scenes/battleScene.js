@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { EventDispatcher } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { loaderFBX } from "../../utils/loader";
+
+import { loaderOBJ } from "../../utils/loader";
 import { POKEMON_ROSTER, Enemy, player } from "../../utils/monsters";
 import { EnemyTurn, PlayerTurn } from "../../utils/utils";
 import Monster from "../monster";
@@ -12,7 +12,6 @@ export default class BattleScene {
     this.scene = undefined;
     this.camera = undefined;
     this.renderer = undefined;
-    this.controls = undefined;
     this.objects = [];
     this._deltaTime = null;
     this.Events = {};
@@ -37,7 +36,6 @@ export default class BattleScene {
     this._renderer();
     this._scene();
     this._camera();
-    this._controls();
     this._light();
     this._createObject();
     window.addEventListener("resize", this._onWindowResize.bind(this));
@@ -90,7 +88,7 @@ export default class BattleScene {
 
     const playerMonster = this.objects.find(m => m._isPlayer);
     const newEnemy = new Monster(
-      this.scene, { x: -4, y: 1, z: -3 }, 2.5, this.Events, enemyInfo, false
+      this.scene, { x: -4, y: 1, z: -3 }, 2.5, this.Events, enemyInfo, false, this.camera
     );
     newEnemy.setOpponent(this._playerInfo);
     playerMonster?.setOpponent(enemyInfo);
@@ -128,17 +126,7 @@ export default class BattleScene {
       1,
       1000
     );
-    this.camera.position.set(12, 7, 12);
-  }
-
-  _controls() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
-    this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 3;
-    this.controls.maxDistance = 25;
-    this.controls.autoRotate = false;
+    this.camera.position.set(0.73,0.95, 8);
   }
 
   _light() {
@@ -158,8 +146,11 @@ export default class BattleScene {
   }
 
   async _createObject() {
-    const arena = await loaderFBX("assets/arena.fbx");
-    this.scene.add(arena);
+    const stadium = await loaderOBJ(
+      "assets/stadium/Super Training Stage.obj",
+      "assets/stadium/Super Training Stage.mtl"
+    );
+    this.scene.add(stadium);
 
     const playerInfo = this._selectedMonsterName?.sprites
       ? this._selectedMonsterName
@@ -179,8 +170,8 @@ export default class BattleScene {
     this._gameElement.appendChild(battleMenu);
 
     // player bottom-right of arena, enemy top-left — mirrors original FBX positions
-    const playerMonster = new Monster(this.scene, { x: 4, y: 1, z: 3 }, 2.5, this.Events, playerInfo, true);
-    const enemyMonster = new Monster(this.scene, { x: -4, y: 1, z: -3 }, 2.5, this.Events, enemyInfo, false);
+    const playerMonster = new Monster(this.scene, { x: 0, y: 0.5, z: 6 }, 2.5, this.Events, playerInfo, true, this.camera);
+    const enemyMonster = new Monster(this.scene, { x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyInfo, false, this.camera);
     playerMonster.setOpponent(enemyInfo);
     enemyMonster.setOpponent(playerInfo);
     this.objects.push(playerMonster, enemyMonster);
@@ -195,7 +186,6 @@ export default class BattleScene {
   _sceneLoop(t) {
     if (this._deltaTime === null) this._deltaTime = t;
     this._gameLoop = requestAnimationFrame((t) => this._sceneLoop(t));
-    this.controls.update();
     this.objects.forEach(el => el.Update());
     this._render();
     this._deltaTime = t;
@@ -220,7 +210,6 @@ export default class BattleScene {
     const gameOver = this._gameElement?.querySelector("game-over");
     if (gameOver) gameOver.remove();
     document.querySelectorAll(".playerContainer, .enemyContainer").forEach(el => el.remove());
-    this.controls.dispose();
     this.renderer.dispose();
     this.scene = undefined;
     this.camera = undefined;

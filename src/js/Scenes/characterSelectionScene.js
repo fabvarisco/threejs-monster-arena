@@ -1,6 +1,5 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { loaderFBX } from "../../utils/loader";
+
 import { POKEMON_ROSTER } from "../../utils/monsters";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
 
@@ -9,12 +8,12 @@ export default class CharacterSelectionScene {
     this.scene = undefined;
     this.camera = undefined;
     this.renderer = undefined;
-    this.controls = undefined;
     this._lastFrameTime = null;
     this._gameLoop = undefined;
     this._gameElement = undefined;
     this._loadingElement = undefined;
     this._previewSprite = undefined;
+    this._infoElement = undefined;
     this._boundOnWindowResize = this._onWindowResize.bind(this);
     this._init();
   }
@@ -24,7 +23,6 @@ export default class CharacterSelectionScene {
     this._renderer();
     this._scene();
     this._camera();
-    this._controls();
     this._light();
     this._createObject();
 
@@ -37,11 +35,18 @@ export default class CharacterSelectionScene {
     this._gameElement.appendChild(list);
     list.setAttribute("monsters", JSON.stringify(monsters));
 
+    this._infoElement = document.createElement("monster-info-element");
+    this._gameElement.appendChild(this._infoElement);
+
     list.addEventListener("changeMonster", (e) => {
       this._loadSelectedMonster(e.detail.monster);
+      this._infoElement.setAttribute("monster", JSON.stringify(e.detail.monster));
     });
 
-    if (monsters.length > 0) this._loadSelectedMonster(monsters[0]);
+    if (monsters.length > 0) {
+      this._loadSelectedMonster(monsters[0]);
+      this._infoElement.setAttribute("monster", JSON.stringify(monsters[0]));
+    }
 
     window.addEventListener("resize", this._boundOnWindowResize);
   }
@@ -77,17 +82,8 @@ export default class CharacterSelectionScene {
       1,
       1000
     );
-    this.camera.position.set(0, 10, 14);
-  }
-
-  _controls() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
-    this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 3;
-    this.controls.maxDistance = 25;
-    this.controls.autoRotate = true;
+    this.camera.position.set(0, 1.5, 4);
+    this.camera.lookAt(0, 1.5, 0);
   }
 
   _light() {
@@ -106,10 +102,7 @@ export default class CharacterSelectionScene {
     this.renderer.render(this.scene, this.camera);
   }
 
-  async _createObject() {
-    const arena = await loaderFBX("assets/arena.fbx");
-    this.scene.add(arena);
-  }
+  _createObject() {}
 
   async _loadSelectedMonster(monster) {
     if (this._previewSprite) {
@@ -119,8 +112,7 @@ export default class CharacterSelectionScene {
       this._previewSprite = undefined;
     }
 
-    const url = monster.sprites.artwork || monster.sprites.front;
-    const texture = await new THREE.TextureLoader().loadAsync(url);
+    const texture = await new THREE.TextureLoader().loadAsync(monster.sprites.front);
     texture.magFilter = THREE.NearestFilter;
 
     const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
@@ -139,8 +131,6 @@ export default class CharacterSelectionScene {
   _sceneLoop() {
     this._gameLoop = requestAnimationFrame((t) => {
       if (this._lastFrameTime === null) this._lastFrameTime = t;
-      const deltaTime = (t - this._lastFrameTime) / 1000;
-      this.controls.update();
       this._render();
       this._lastFrameTime = t;
       this._sceneLoop();
@@ -154,10 +144,10 @@ export default class CharacterSelectionScene {
   DestroyScene() {
     cancelAnimationFrame(this._gameLoop);
     this.renderer.setAnimationLoop(null);
-    window.removeEventListener("resize", this._onWindowResize.bind(this));
+    window.removeEventListener("resize", this._boundOnWindowResize);
 
-    const list = this._gameElement?.querySelector("monster-list-element");
-    if (list) this._gameElement.removeChild(list);
+    this._gameElement?.querySelector("monster-list-element")?.remove();
+    this._gameElement?.querySelector("monster-info-element")?.remove();
 
     if (this._previewSprite) {
       this.scene.remove(this._previewSprite);
@@ -165,12 +155,10 @@ export default class CharacterSelectionScene {
       this._previewSprite.material.dispose();
     }
 
-    this.controls.dispose();
     this.renderer.dispose();
     this.scene = undefined;
     this.camera = undefined;
     this.renderer = undefined;
-    this.controls = undefined;
     this._lastFrameTime = null;
   }
 }
