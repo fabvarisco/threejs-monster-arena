@@ -14,62 +14,66 @@ class MonsterList extends HTMLElement {
       }
       .select-monster-card-container {
         position: fixed;
-        top:25%;
-        display:flex;
+        top: 25%;
+        display: flex;
         gap: 8px;
         flex-direction: column;
         margin: 8px;
       }
 
       .selected-monster {
-        color:white;
+        color: white;
       }
-        
+
       .btn {
-        width: 128px;
-        height: 128px;
+        width: 180px;
+        min-height: 72px;
         border-radius: 25px;
-        text-align: start;
-        padding-left: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
         font-weight: 600;
         background: black;
         color: white;
-        font-size: 24px;
+        font-size: 18px;
         font-family: Nunito;
         border: white 6px solid;
-        margin-top: 5px;
-        margin-bottom: 5px;
+        cursor: pointer;
       }
       .btn:hover {
-          cursor: pointer;
-          box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
-          transform: scale(1);
-          animation: pulse 2s infinite;
+        animation: pulse 2s infinite;
       }
       @keyframes pulse {
         0% {
           transform: scale(0.95);
           box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
         }
-  
         70% {
           transform: scale(1);
           box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
         }
-  
         100% {
           transform: scale(0.95);
           box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
         }
       }
 
-      .btn.select-monster {
-        position:absolute;
-        right:0;
-        bottom:10px;
-        width:200px;
+      .monster-thumb {
+        width: 48px;
+        height: 48px;
+        image-rendering: pixelated;
+        object-fit: contain;
+        flex-shrink: 0;
       }
 
+      .btn.select-monster {
+        position: absolute;
+        right: 0;
+        bottom: 10px;
+        width: 200px;
+        justify-content: center;
+      }
       </style>
       <div class="select-monster-container">
         <div class="select-monster-card-container"></div>
@@ -78,20 +82,7 @@ class MonsterList extends HTMLElement {
       <button id="start-battle" class="btn select-monster">Select Monster</button>
     `;
 
-    this.monsters = [
-      {
-        name: "Bat",
-      },
-      {
-        name: "Dragon",
-      },
-      {
-        name: "Skeleton",
-      },
-      {
-        name: "Mage",
-      },
-    ];
+    this.monsters = [];
     this.selectedMonster = {};
     this.selectMonsterContainerCard = this.shadowRoot.querySelector(
       ".select-monster-card-container"
@@ -99,7 +90,7 @@ class MonsterList extends HTMLElement {
 
     const startBattleScene = this.shadowRoot.getElementById("start-battle");
     startBattleScene.addEventListener("click", () => {
-      this.dispatchEvent(new CustomEvent("startBattle", { bubbles: true, detail: {selectedMonster: this.selectedMonster}  }));
+      this.dispatchEvent(new CustomEvent("startBattle", { bubbles: true, detail: { selectedMonster: this.selectedMonster } }));
     });
   }
 
@@ -122,12 +113,14 @@ class MonsterList extends HTMLElement {
     this.selectMonsterContainerCard.innerHTML = "";
     this.monsters.forEach((monster, index) => {
       const listItem = document.createElement("div");
-      listItem.textContent = `${monster.name}`;
       listItem.className = "btn";
       listItem.dataset.index = index;
+      listItem.innerHTML = `
+        <img src="${monster.sprites?.front ?? ''}" alt="${monster.name}" class="monster-thumb" />
+        <span>${monster.name}</span>
+      `;
       listItem.addEventListener("click", () => {
         this.selectedMonster = monster;
-        this.renderSelectedMonster();
         this.dispatchEvent(
           new CustomEvent("changeMonster", {
             bubbles: true,
@@ -137,12 +130,6 @@ class MonsterList extends HTMLElement {
       });
       this.selectMonsterContainerCard.appendChild(listItem);
     });
-    this.renderSelectedMonster();
-  }
-
-  renderSelectedMonster() {
-    const selectedMonsterContainer =
-      this.shadowRoot.querySelector(".selected-monster");
   }
 }
 

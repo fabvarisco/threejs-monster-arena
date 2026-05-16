@@ -12,14 +12,11 @@ export default class TitleScene {
     this._gameLoop = undefined;
     this._gameElement = undefined;
     this._titleScreenElement = undefined;
+    this._boundOnWindowResize = this._onWindowResize.bind(this);
     this._init();
   }
 
   _init() {
-    this._documentEvents();
-    this._document();
-    this._events();
-    this._addListener();
     this._renderer();
     this._scene();
     this._camera();
@@ -27,7 +24,7 @@ export default class TitleScene {
     this._light();
     this._createObject();
     this._addWebComponents();
-    window.addEventListener("resize", this._onWindowResize.bind(this));
+    window.addEventListener("resize", this._boundOnWindowResize);
   }
 
   _addWebComponents() {
@@ -35,21 +32,6 @@ export default class TitleScene {
     this._titleScreenElement = document.createElement("title-screen-element");
     this._gameElement.appendChild(this._titleScreenElement);
   }
-
-  _document() {
-    //asdsadas
-    // document.getElementById("attacks").className = "none";
-    // document.getElementById("items").className = "none";
-  }
-
-  _events() {}
-
-  _addListener() {}
-
-  _documentEvents() {
-
-  }
-
 
   _renderer() {
     this.renderer = new THREE.WebGLRenderer({
@@ -76,32 +58,29 @@ export default class TitleScene {
       1,
       1000
     );
-    this.camera.position.set(400, 200, 0);
+    this.camera.position.set(0, 10, 14);
   }
 
   _controls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-
     this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 1;
-    this.controls.maxDistance = 8;
+    this.controls.minDistance = 3;
+    this.controls.maxDistance = 25;
     this.controls.autoRotate = true;
   }
 
   _light() {
-    const dirLight1 = new THREE.HemisphereLight(0xffffff, 0x444444);
-    dirLight1.position.set(0, 200, 0);
-    this.scene.add(dirLight1);
+    const hemLight = new THREE.HemisphereLight(0xffffff, 0x444444);
+    hemLight.position.set(0, 200, 0);
+    this.scene.add(hemLight);
 
-    const dirLight2 = new THREE.DirectionalLight(0x002288);
-    dirLight2.position.set(-1, -1, -1);
-    this.scene.add(dirLight2);
+    const dirLight = new THREE.DirectionalLight(0x002288);
+    dirLight.position.set(-1, -1, -1);
+    this.scene.add(dirLight);
 
-    const ambientLight = new THREE.AmbientLight(0x222222);
-    this.scene.add(ambientLight);
+    this.scene.add(new THREE.AmbientLight(0x222222));
   }
 
   _render() {
@@ -121,12 +100,9 @@ export default class TitleScene {
 
   _sceneLoop() {
     this._gameLoop = requestAnimationFrame((t) => {
-      if (this._deltaTime === null) {
-        this._deltaTime = t;
-      }
+      if (this._deltaTime === null) this._deltaTime = t;
       this._sceneLoop();
       this.controls.update();
-
       this._render();
       this._deltaTime = t;
     });
@@ -138,23 +114,14 @@ export default class TitleScene {
 
   DestroyScene() {
     cancelAnimationFrame(this._gameLoop);
-    this._titleScreenElement.remove();
     this.renderer.setAnimationLoop(null);
+    window.removeEventListener("resize", this._boundOnWindowResize);
 
-    window.removeEventListener("resize", this._onWindowResize.bind(this));
-
-    const gameElement = document.getElementById("game");
-    const titleScreenElement = gameElement.querySelector(
-      "title-screen-element"
-    );
-    if (titleScreenElement) {
-      gameElement.removeChild(titleScreenElement);
-    }
+    const titleScreenElement = this._gameElement?.querySelector("title-screen-element");
+    if (titleScreenElement) this._gameElement.removeChild(titleScreenElement);
 
     this.controls.dispose();
-
     this.renderer.dispose();
-  
     this.scene = undefined;
     this.camera = undefined;
     this.renderer = undefined;

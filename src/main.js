@@ -1,4 +1,5 @@
-import GameManager from "./js/GameManager";
+import GameManager from "./js/gameManager";
+import 'animate.css';
 
 function main() {
   const gameManager = new GameManager();

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { loaderFBX } from "../../utils/loader";
+import { POKEMON_ROSTER } from "../../utils/monsters";
+import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
 
 export default class CharacterSelectionScene {
   constructor() {
@@ -10,60 +12,45 @@ export default class CharacterSelectionScene {
     this.controls = undefined;
     this._lastFrameTime = null;
     this._gameLoop = undefined;
-    this._loading = false;
+    this._gameElement = undefined;
     this._loadingElement = undefined;
-    this.selectedMonster = { name: "Bat", model: undefined };
-    this.monsterList = {
-      mage: { name: "mage", model: undefined },
-      bat: { name: "Bat", model: undefined },
-      dragon: { name: "Dragon", model: undefined },
-      slime: { name: "Slime", model: undefined },
-      skeleton: { name: "Skeleton", model: undefined },
-    }
+    this._previewSprite = undefined;
+    this._boundOnWindowResize = this._onWindowResize.bind(this);
     this._init();
-
   }
 
   async _init() {
     this._addWebComponents();
-    this._document();
-    this._events();
-    this._addListener();
     this._renderer();
     this._scene();
     this._camera();
     this._controls();
     this._light();
     this._createObject();
-    await this._loadMonsters();
 
-    window.addEventListener("resize", this._onWindowResize.bind(this));
+    const results = await Promise.all(POKEMON_ROSTER.map(name => fetchPokemon(name)));
+    const monsters = results.map(mapPokemonToMonster);
+
+    this._gameElement.removeChild(this._loadingElement);
+
+    const list = document.createElement("monster-list-element");
+    this._gameElement.appendChild(list);
+    list.setAttribute("monsters", JSON.stringify(monsters));
+
+    list.addEventListener("changeMonster", (e) => {
+      this._loadSelectedMonster(e.detail.monster);
+    });
+
+    if (monsters.length > 0) this._loadSelectedMonster(monsters[0]);
+
+    window.addEventListener("resize", this._boundOnWindowResize);
   }
-
 
   _addWebComponents() {
     this._gameElement = document.getElementById("game");
     this._loadingElement = document.createElement("loading-element");
     this._gameElement.appendChild(this._loadingElement);
   }
-
-  _document() {
-    //asdsadas
-    // document.getElementById("attacks").className = "none";
-    // document.getElementById("items").className = "none";
-  }
-
-  _events() {
-    document.addEventListener("startgame", () => {
-      this._changeScene('gameScene');
-    });
-    document.addEventListener("changeMonster", (event) => {
-      console.log(event);
-      this._loadSelectedMonster(event.detail.monster);
-    });
-  }
-
-  _addListener() { }
 
   _renderer() {
     this.renderer = new THREE.WebGLRenderer({
@@ -90,32 +77,29 @@ export default class CharacterSelectionScene {
       1,
       1000
     );
-    this.camera.position.set(400, 200, 0);
+    this.camera.position.set(0, 10, 14);
   }
 
   _controls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-
     this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 1;
-    this.controls.maxDistance = 8;
+    this.controls.minDistance = 3;
+    this.controls.maxDistance = 25;
     this.controls.autoRotate = true;
   }
 
   _light() {
-    const dirLight1 = new THREE.HemisphereLight(0xffffff, 0x444444);
-    dirLight1.position.set(0, 200, 0);
-    this.scene.add(dirLight1);
+    const hemLight = new THREE.HemisphereLight(0xffffff, 0x444444);
+    hemLight.position.set(0, 200, 0);
+    this.scene.add(hemLight);
 
-    const dirLight2 = new THREE.DirectionalLight(0x002288);
-    dirLight2.position.set(-1, -1, -1);
-    this.scene.add(dirLight2);
+    const dirLight = new THREE.DirectionalLight(0x002288);
+    dirLight.position.set(-1, -1, -1);
+    this.scene.add(dirLight);
 
-    const ambientLight = new THREE.AmbientLight(0x222222);
-    this.scene.add(ambientLight);
+    this.scene.add(new THREE.AmbientLight(0x222222));
   }
 
   _render() {
@@ -127,36 +111,23 @@ export default class CharacterSelectionScene {
     this.scene.add(arena);
   }
 
-  async _loadMonsters() {
-    const loadPromises = Object.values(this.monsterList).map(async (monster) => {
-      monster.model = await loaderFBX(`assets/monsters/${monster.name}.fbx`);
-      monster.model.scale.setScalar(1);
-
-
-      if (monster.model.animations && monster.model.animations.length > 0) {
-        monster.mixer = new THREE.AnimationMixer(monster.model);
-        const action = monster.mixer.clipAction(monster.model.animations[1]);
-        action.play();
-        action.timeScale = 0.2;
-      }
-
-
-
-    });
-
-    await Promise.all(loadPromises);
-
-    this._gameElement.removeChild(this._loadingElement)
-
-    const list = document.createElement("monster-list-element");
-    this._gameElement.appendChild(list);
-    this.selectedMonster = this.monsterList.bat;
-  }
-
   async _loadSelectedMonster(monster) {
-    this.scene.remove(this.selectedMonster.model);
-    this.selectedMonster = this.monsterList[monster.name.toLowerCase()];
-    this.scene.add(this.selectedMonster.model);
+    if (this._previewSprite) {
+      this.scene.remove(this._previewSprite);
+      this._previewSprite.material.map?.dispose();
+      this._previewSprite.material.dispose();
+      this._previewSprite = undefined;
+    }
+
+    const url = monster.sprites.artwork || monster.sprites.front;
+    const texture = await new THREE.TextureLoader().loadAsync(url);
+    texture.magFilter = THREE.NearestFilter;
+
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    this._previewSprite = new THREE.Sprite(material);
+    this._previewSprite.position.set(0, 1.5, 0);
+    this._previewSprite.scale.setScalar(3);
+    this.scene.add(this._previewSprite);
   }
 
   _onWindowResize() {
@@ -166,23 +137,11 @@ export default class CharacterSelectionScene {
   }
 
   _sceneLoop() {
-    if (this._loading) return;
-
     this._gameLoop = requestAnimationFrame((t) => {
-      if (this._lastFrameTime === undefined) {
-        this._lastFrameTime = t;
-      }
-
+      if (this._lastFrameTime === null) this._lastFrameTime = t;
       const deltaTime = (t - this._lastFrameTime) / 1000;
-
       this.controls.update();
-
-      if (this.selectedMonster.mixer) {
-        this.selectedMonster.mixer.update(deltaTime);
-      }
-
       this._render();
-
       this._lastFrameTime = t;
       this._sceneLoop();
     });
@@ -195,20 +154,19 @@ export default class CharacterSelectionScene {
   DestroyScene() {
     cancelAnimationFrame(this._gameLoop);
     this.renderer.setAnimationLoop(null);
-
     window.removeEventListener("resize", this._onWindowResize.bind(this));
 
-    const gameElement = document.getElementById("game");
-    const list = gameElement.querySelector("monster-list-element");
-    if (list) {
-      gameElement.removeChild(list);
+    const list = this._gameElement?.querySelector("monster-list-element");
+    if (list) this._gameElement.removeChild(list);
+
+    if (this._previewSprite) {
+      this.scene.remove(this._previewSprite);
+      this._previewSprite.material.map?.dispose();
+      this._previewSprite.material.dispose();
     }
 
-
     this.controls.dispose();
-
     this.renderer.dispose();
-
     this.scene = undefined;
     this.camera = undefined;
     this.renderer = undefined;

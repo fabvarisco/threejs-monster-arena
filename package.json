@@ -18,10 +18,11 @@
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.3.0",
     "prettier": "^3.2.5",
-    "vite": "^3.0.7"
+    "vite": "^8.0.0"
   },
   "dependencies": {
     "@babel/runtime": "^7.18.9",
+    "animate.css": "^4.1.1",
     "hover.css": "^2.3.2",
     "three": "^0.143.0"
   }

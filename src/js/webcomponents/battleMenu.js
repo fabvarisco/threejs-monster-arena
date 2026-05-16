@@ -1,9 +1,15 @@
+import { player } from "../../utils/monsters.js";
+
 class BattleMenu extends HTMLElement {
   constructor() {
     super();
   }
 
   connectedCallback() {
+    const attacks = player.selectedMonster?.attacks ?? [];
+    const attack1Name = attacks[0]?.name ?? "Attack 1";
+    const attack2Name = attacks[1]?.name ?? "Attack 2";
+
     this.innerHTML = `
         <div id="container" class="container block">
           <div id="options" class="block">
@@ -12,8 +18,8 @@ class BattleMenu extends HTMLElement {
           </div>
 
           <div id="attacks" class="none">
-            <button id="attack1" class="btn">Attack1</button>
-            <button id="attack2" class="btn">Attack2</button>
+            <button id="attack1" class="btn">${attack1Name}</button>
+            <button id="attack2" class="btn">${attack2Name}</button>
             <button class="btn btn-back">Back</button>
           </div>
 

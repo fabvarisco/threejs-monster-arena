@@ -2,9 +2,10 @@ import * as THREE from "three";
 import { EventDispatcher } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { loaderFBX } from "../../utils/loader";
-import { Enemy, player } from "../../utils/monsters";
+import { POKEMON_ROSTER, Enemy, player } from "../../utils/monsters";
 import { EnemyTurn, PlayerTurn } from "../../utils/utils";
 import Monster from "../monster";
+import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
 
 export default class BattleScene {
   constructor(_selectedMonsterName) {
@@ -16,18 +17,13 @@ export default class BattleScene {
     this._deltaTime = null;
     this.Events = {};
     this.Turn = true;
-    this._loading = false;
     this._gameElement = undefined;
     this._loadingElement = undefined;
-
-    this.PlayerContainer = undefined;
-    this.EnemyContainer = undefined;
-
-    this.Player = player;
-    this.Enemy = Enemy;
-
-    this.MonsterPlayer = undefined;
-    this.MonsterEnemy = undefined;
+    this._gameLoop = undefined;
+    this._onGameOver = this._handleGameOver.bind(this);
+    this._onEnemyDefeated = this._handleEnemyDefeated.bind(this);
+    this._playerInfo = null;
+    this._currentEnemyName = null;
 
     this._selectedMonsterName = _selectedMonsterName;
 
@@ -46,9 +42,10 @@ export default class BattleScene {
     this._createObject();
     window.addEventListener("resize", this._onWindowResize.bind(this));
   }
+
   _document() {
     this._gameElement = document.getElementById("game");
-    this._loadingElement = document.createElement("loading");
+    this._loadingElement = document.createElement("loading-element");
     this._gameElement.appendChild(this._loadingElement);
   }
 
@@ -56,22 +53,57 @@ export default class BattleScene {
     this.Events["enemyDamage"] = new EventDispatcher();
     this.Events["playerDamage"] = new EventDispatcher();
     this.Events["changeTurn"] = new EventDispatcher();
-    this.Events["hp"] = new EventDispatcher();
-
     this.Events["monsterPlayerHpChanged"] = new EventDispatcher();
     this.Events["monsterEnemyHpChanged"] = new EventDispatcher();
-    this.Events["monsterName"] = new EventDispatcher();
   }
 
   _addListener() {
-    this.Events["changeTurn"].addEventListener("changeTurn", (e) => {
+    this.Events["changeTurn"].addEventListener("changeTurn", () => {
       this.Turn = !this.Turn;
-      if (this.Turn) {
-        PlayerTurn();
-      } else {
-        EnemyTurn();
-      }
+      if (this.Turn) PlayerTurn(); else EnemyTurn();
     });
+    document.addEventListener("gameOver", this._onGameOver);
+    document.addEventListener("enemyDefeated", this._onEnemyDefeated);
+  }
+
+  async _handleEnemyDefeated() {
+    const deadEnemy = this.objects.find(m => !m._isPlayer);
+    deadEnemy?.Destroy();
+    this.objects = this.objects.filter(m => m._isPlayer);
+
+    // Orphan the dead enemy's listener by replacing the dispatcher
+    this.Events["monsterEnemyHpChanged"] = new EventDispatcher();
+
+    EnemyTurn();
+    this._gameElement.appendChild(this._loadingElement);
+
+    const available = POKEMON_ROSTER.filter(
+      n => n !== this._playerInfo.name && n !== this._currentEnemyName
+    );
+    const enemyName = available[Math.floor(Math.random() * available.length)];
+    const enemyInfo = mapPokemonToMonster(await fetchPokemon(enemyName));
+
+    this._currentEnemyName = enemyInfo.name;
+    Enemy.selectedMonster = enemyInfo;
+
+    this._gameElement.removeChild(this._loadingElement);
+
+    const playerMonster = this.objects.find(m => m._isPlayer);
+    const newEnemy = new Monster(
+      this.scene, { x: -4, y: 1, z: -3 }, 2.5, this.Events, enemyInfo, false
+    );
+    newEnemy.setOpponent(this._playerInfo);
+    playerMonster?.setOpponent(enemyInfo);
+    this.objects.push(newEnemy);
+
+    PlayerTurn();
+  }
+
+  _handleGameOver() {
+    const battleMenu = this._gameElement?.querySelector("battle-menu");
+    if (battleMenu) battleMenu.style.display = "none";
+    const gameOver = document.createElement("game-over");
+    this._gameElement.appendChild(gameOver);
   }
 
   _renderer() {
@@ -96,83 +128,62 @@ export default class BattleScene {
       1,
       1000
     );
-    this.camera.position.set(400, 200, 0);
+    this.camera.position.set(12, 7, 12);
   }
 
   _controls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-
     this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 1;
-    this.controls.maxDistance = 8;
+    this.controls.minDistance = 3;
+    this.controls.maxDistance = 25;
     this.controls.autoRotate = false;
   }
 
   _light() {
-    const dirLight1 = new THREE.HemisphereLight(0xffffff, 0x444444);
-    dirLight1.position.set(0, 200, 0);
-    this.scene.add(dirLight1);
+    const hemLight = new THREE.HemisphereLight(0xffffff, 0x444444);
+    hemLight.position.set(0, 200, 0);
+    this.scene.add(hemLight);
 
-    const dirLight2 = new THREE.DirectionalLight(0x002288);
-    dirLight2.position.set(-1, -1, -1);
-    this.scene.add(dirLight2);
+    const dirLight = new THREE.DirectionalLight(0x002288);
+    dirLight.position.set(-1, -1, -1);
+    this.scene.add(dirLight);
 
-    const ambientLight = new THREE.AmbientLight(0x222222);
-    this.scene.add(ambientLight);
+    this.scene.add(new THREE.AmbientLight(0x222222));
   }
 
   _render() {
     this.renderer.render(this.scene, this.camera);
   }
 
-  _createSprites() {
-    const textureLoader = new THREE.TextureLoader();
-
-    const mapC = textureLoader.load("trainer.png");
-    const materialC = new THREE.SpriteMaterial({
-      map: mapC,
-      color: 0xffffff,
-      fog: true,
-    });
-    const sprite = new THREE.Sprite(materialC);
-
-    sprite.position.set(0, 100, 0);
-    sprite.position.normalize();
-    this.scene.add(sprite);
-  }
-
   async _createObject() {
     const arena = await loaderFBX("assets/arena.fbx");
-
-    this.MonsterPlayer = new Monster(
-      this.scene,
-      { x: 5, y: 0.1, z: 3 },
-      3,
-      1,
-      this.Events,
-      {name: "Mage"},
-      true
-    );
-    this.MonsterEnemy = new Monster(
-      this.scene,
-      { x: -5, y: 0.1, z: -3 },
-      -6.3,
-      1,
-      this.Events,
-      {name: "Skeleton_Warrior"},
-      false
-    );
-
-    this.objects.push(this.MonsterPlayer);
-    this.objects.push(this.MonsterEnemy);
     this.scene.add(arena);
 
+    const playerInfo = this._selectedMonsterName?.sprites
+      ? this._selectedMonsterName
+      : mapPokemonToMonster(await fetchPokemon(this._selectedMonsterName?.name ?? "charmander"));
+
+    const available = POKEMON_ROSTER.filter(n => n !== playerInfo.name);
+    const enemyName = available[Math.floor(Math.random() * available.length)];
+    const enemyInfo = mapPokemonToMonster(await fetchPokemon(enemyName));
+
+    this._playerInfo = playerInfo;
+    this._currentEnemyName = enemyInfo.name;
+    player.selectedMonster = playerInfo;
+    Enemy.selectedMonster = enemyInfo;
+
+    this._gameElement.removeChild(this._loadingElement);
     const battleMenu = document.createElement("battle-menu");
-    this._gameElement.remove(this._loadingElement);
-    this._gameElement.appendChild(battleMenu)
+    this._gameElement.appendChild(battleMenu);
+
+    // player bottom-right of arena, enemy top-left — mirrors original FBX positions
+    const playerMonster = new Monster(this.scene, { x: 4, y: 1, z: 3 }, 2.5, this.Events, playerInfo, true);
+    const enemyMonster = new Monster(this.scene, { x: -4, y: 1, z: -3 }, 2.5, this.Events, enemyInfo, false);
+    playerMonster.setOpponent(enemyInfo);
+    enemyMonster.setOpponent(playerInfo);
+    this.objects.push(playerMonster, enemyMonster);
   }
 
   _onWindowResize() {
@@ -181,31 +192,40 @@ export default class BattleScene {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
+  _sceneLoop(t) {
+    if (this._deltaTime === null) this._deltaTime = t;
+    this._gameLoop = requestAnimationFrame((t) => this._sceneLoop(t));
+    this.controls.update();
+    this.objects.forEach(el => el.Update());
+    this._render();
+    this._deltaTime = t;
+  }
+
   SceneLoop() {
-    requestAnimationFrame((t) => {
-      if (this._deltaTime === null) {
-        this._deltaTime = t;
-      }
-
-      this.SceneLoop();
-      this.controls.update();
-
-      this.objects.forEach((element) =>
-        element.Update(t - this._deltaTime, this.Turn)
-      );
-
-      if (this.Turn) {
-        //PlayerTurn();
-      } else {
-        //EnemyTurn();
-      }
-
-      this._render();
-      this._deltaTime = t;
-    });
+    this._gameLoop = requestAnimationFrame((t) => this._sceneLoop(t));
   }
 
   InitScene() {
     this.SceneLoop();
+  }
+
+  DestroyScene() {
+    cancelAnimationFrame(this._gameLoop);
+    this.renderer.setAnimationLoop(null);
+    document.removeEventListener("gameOver", this._onGameOver);
+    document.removeEventListener("enemyDefeated", this._onEnemyDefeated);
+    window.removeEventListener("resize", this._onWindowResize.bind(this));
+    const battleMenu = this._gameElement?.querySelector("battle-menu");
+    if (battleMenu) battleMenu.remove();
+    const gameOver = this._gameElement?.querySelector("game-over");
+    if (gameOver) gameOver.remove();
+    document.querySelectorAll(".playerContainer, .enemyContainer").forEach(el => el.remove());
+    this.controls.dispose();
+    this.renderer.dispose();
+    this.scene = undefined;
+    this.camera = undefined;
+    this.renderer = undefined;
+    this.controls = undefined;
+    this._deltaTime = null;
   }
 }
