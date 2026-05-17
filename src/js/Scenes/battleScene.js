@@ -71,6 +71,11 @@ export default class BattleScene {
     this.Events["monsterEnemyHpChanged"] = new EventDispatcher();
 
     EnemyTurn();
+
+    const rewardScreen = document.createElement("item-reward-screen");
+    this._gameElement.appendChild(rewardScreen);
+    await new Promise(resolve => document.addEventListener("rewardSelected", resolve, { once: true }));
+
     this._gameElement.appendChild(this._loadingElement);
 
     const available = POKEMON_ROSTER.filter(
@@ -86,7 +91,7 @@ export default class BattleScene {
 
     const playerMonster = this.objects.find(m => m._isPlayer);
     const newEnemy = new Monster(
-      this.scene,{ x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyInfo, false, this.camera
+      this.scene, { x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyInfo, false, this.camera
     );
     newEnemy.setOpponent(this._playerInfo);
     playerMonster?.setOpponent(enemyInfo);
@@ -207,6 +212,8 @@ export default class BattleScene {
     if (battleMenu) battleMenu.remove();
     const gameOver = this._gameElement?.querySelector("game-over");
     if (gameOver) gameOver.remove();
+    const rewardScreen = this._gameElement?.querySelector("item-reward-screen");
+    if (rewardScreen) rewardScreen.remove();
     document.querySelectorAll("monster-hp-element").forEach(el => el.remove());
     this.renderer.dispose();
     this.scene = undefined;
