@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { EnemyTurn, PlayerTurn } from "../utils/utils";
+import { getTypeMultiplier } from "../utils/typeChart";
 
 const vertexShader = `
   uniform float uShake;
@@ -124,10 +125,15 @@ export default class Monster {
     }
   }
 
-  _calculateDamage(attackerInfo, defenderInfo) {
-    const base = Math.floor((attackerInfo.damage / Math.max(1, defenderInfo.defense)) * 20);
+  _calculateDamage(attackerInfo, defenderInfo, attackIndex = 0) {
+    const atk = attackerInfo.damage;
+    const def = Math.max(1, defenderInfo.defense);
+    const base = atk - def;
+    const attackType = attackerInfo.attacks?.[attackIndex]?.type ?? attackerInfo.type;
+    const defenderTypes = defenderInfo.types ?? [defenderInfo.type ?? "normal"];
+    const typeMultiplier = getTypeMultiplier(attackType, defenderTypes);
     const variance = 0.85 + Math.random() * 0.15;
-    return Math.max(1, Math.floor(base * variance));
+    return Math.max(1, Math.floor(base * typeMultiplier * variance));
   }
 
   _addListeners() {
@@ -137,7 +143,8 @@ export default class Monster {
         this._playAttackAnimation(attackIndex);
         const damage = this._calculateDamage(
           this._information,
-          this._opponentInfo ?? { defense: 1 }
+          this._opponentInfo ?? { defense: 1, type: "normal", types: ["normal"] },
+          attackIndex
         );
         this._events["monsterEnemyHpChanged"].dispatchEvent({
           type: "monsterEnemyHpChanged",
@@ -171,7 +178,7 @@ export default class Monster {
           this._playAttackAnimation(0);
           const damage = this._calculateDamage(
             this._information,
-            this._opponentInfo ?? { defense: 1 }
+            this._opponentInfo ?? { defense: 1, type: "normal", types: ["normal"] }
           );
           this._events["monsterPlayerHpChanged"].dispatchEvent({
             type: "monsterPlayerHpChanged",

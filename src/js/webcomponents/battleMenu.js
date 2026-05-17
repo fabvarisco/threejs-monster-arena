@@ -7,8 +7,9 @@ class BattleMenu extends HTMLElement {
 
   connectedCallback() {
     const attacks = player.selectedMonster?.attacks ?? [];
-    const attack1Name = attacks[0]?.name ?? "Attack 1";
-    const attack2Name = attacks[1]?.name ?? "Attack 2";
+    const formatName = (name) => name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const attack1Name = formatName(attacks[0]?.name ?? "Attack 1");
+    const attack2Name = formatName(attacks[1]?.name ?? "Attack 2");
 
     this.innerHTML = `
         <div id="container" class="container block">

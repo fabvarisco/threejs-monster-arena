@@ -48,8 +48,6 @@ export default class BattleScene {
   }
 
   _events() {
-    this.Events["enemyDamage"] = new EventDispatcher();
-    this.Events["playerDamage"] = new EventDispatcher();
     this.Events["changeTurn"] = new EventDispatcher();
     this.Events["monsterPlayerHpChanged"] = new EventDispatcher();
     this.Events["monsterEnemyHpChanged"] = new EventDispatcher();
@@ -209,7 +207,7 @@ export default class BattleScene {
     if (battleMenu) battleMenu.remove();
     const gameOver = this._gameElement?.querySelector("game-over");
     if (gameOver) gameOver.remove();
-    document.querySelectorAll(".playerContainer, .enemyContainer").forEach(el => el.remove());
+    document.querySelectorAll("monster-hp-element").forEach(el => el.remove());
     this.renderer.dispose();
     this.scene = undefined;
     this.camera = undefined;

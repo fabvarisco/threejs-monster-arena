@@ -51,7 +51,7 @@ class PokemonInfo extends HTMLElement {
       .map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t] ?? "#777"}">${t}</span>`)
       .join("");
     const attacks = (m?.attacks ?? [])
-      .map(a => `<div class="attack-item">${a.name.replace(/-/g, " ")}</div>`)
+      .map(a => `<div class="attack-item">${a.name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</div>`)
       .join("");
 
     this.shadowRoot.innerHTML = `

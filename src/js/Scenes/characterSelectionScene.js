@@ -71,8 +71,9 @@ export default class CharacterSelectionScene {
 
   _scene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xcccccc);
-    this.scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
+    new THREE.TextureLoader().loadAsync("assets/background.jpg").then(texture => {
+      this.scene.background = texture;
+    });
   }
 
   _camera() {
