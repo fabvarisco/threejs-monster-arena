@@ -32,7 +32,7 @@ const fragmentShader = `
 export default class Monster {
   constructor(scene, position, scale, events, information, isPlayer, camera) {
     this._maxHp = information.life;
-    this._hp = this._maxHp;
+    this._hp = information.currentHp ?? this._maxHp;
     this._scene = scene;
     this._position = position;
     this._scale = scale;
@@ -113,6 +113,12 @@ export default class Monster {
   // ---
 
   Destroy() {
+    const btn1 = document.getElementById("attack1");
+    const btn2 = document.getElementById("attack2");
+    if (btn1 && this._onAttack1) btn1.removeEventListener("click", this._onAttack1);
+    if (btn2 && this._onAttack2) btn2.removeEventListener("click", this._onAttack2);
+    this._onAttack1 = null;
+    this._onAttack2 = null;
     if (this._onUseItem) {
       document.removeEventListener("useItem", this._onUseItem);
       this._onUseItem = null;
@@ -158,8 +164,10 @@ export default class Monster {
         });
       };
 
-      document.getElementById("attack1").addEventListener("click", () => onAttack(0));
-      document.getElementById("attack2").addEventListener("click", () => onAttack(1));
+      this._onAttack1 = () => onAttack(0);
+      this._onAttack2 = () => onAttack(1);
+      document.getElementById("attack1").addEventListener("click", this._onAttack1);
+      document.getElementById("attack2").addEventListener("click", this._onAttack2);
 
       this._onUseItem = (e) => {
         const { itemId } = e.detail;
@@ -177,7 +185,7 @@ export default class Monster {
         this._damage(e.damage);
         if (this._hp <= 0) {
           this._playDeathAnimation();
-          document.dispatchEvent(new CustomEvent("gameOver"));
+          document.dispatchEvent(new CustomEvent("playerFainted"));
         }
       });
     } else {

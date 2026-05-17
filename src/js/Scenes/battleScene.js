@@ -19,10 +19,12 @@ export default class BattleScene {
     this._gameElement = undefined;
     this._loadingElement = undefined;
     this._gameLoop = undefined;
-    this._onGameOver = this._handleGameOver.bind(this);
     this._onEnemyDefeated = this._handleEnemyDefeated.bind(this);
+    this._onPlayerFainted = this._handlePlayerFainted.bind(this);
+    this._onSwitchMonster = this._handleSwitchMonster.bind(this);
     this._playerInfo = null;
     this._currentEnemyName = null;
+    this._activePartyIdx = 0;
 
     this._selectedMonsterName = _selectedMonsterName;
 
@@ -58,8 +60,9 @@ export default class BattleScene {
       this.Turn = !this.Turn;
       if (this.Turn) PlayerTurn(); else EnemyTurn();
     });
-    document.addEventListener("gameOver", this._onGameOver);
     document.addEventListener("enemyDefeated", this._onEnemyDefeated);
+    document.addEventListener("playerFainted", this._onPlayerFainted);
+    document.addEventListener("switchMonster", this._onSwitchMonster);
   }
 
   async _handleEnemyDefeated() {
@@ -73,8 +76,15 @@ export default class BattleScene {
     EnemyTurn();
 
     const rewardScreen = document.createElement("item-reward-screen");
+    rewardScreen.setAttribute("enemy", JSON.stringify(Enemy.selectedMonster));
     this._gameElement.appendChild(rewardScreen);
-    await new Promise(resolve => document.addEventListener("rewardSelected", resolve, { once: true }));
+    const rewardEvent = await new Promise(resolve => document.addEventListener("rewardSelected", resolve, { once: true }));
+
+    if (rewardEvent.detail?.type === "pokemon") {
+      player.monsters.push(rewardEvent.detail.pokemon);
+      const partyHud = this._gameElement?.querySelector("party-hud");
+      if (partyHud) partyHud.setAttribute("party", JSON.stringify(player.monsters));
+    }
 
     this._gameElement.appendChild(this._loadingElement);
 
@@ -93,7 +103,7 @@ export default class BattleScene {
     const newEnemy = new Monster(
       this.scene, { x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyInfo, false, this.camera
     );
-    newEnemy.setOpponent(this._playerInfo);
+    newEnemy.setOpponent(player.monsters[this._activePartyIdx]);
     playerMonster?.setOpponent(enemyInfo);
     this.objects.push(newEnemy);
 
@@ -105,6 +115,71 @@ export default class BattleScene {
     if (battleMenu) battleMenu.style.display = "none";
     const gameOver = document.createElement("game-over");
     this._gameElement.appendChild(gameOver);
+  }
+
+  _handlePlayerFainted() {
+    player.monsters[this._activePartyIdx].currentHp = 0;
+
+    const nextIdx = player.monsters.findIndex(
+      (m, i) => i !== this._activePartyIdx && (m.currentHp ?? m.life) > 0
+    );
+
+    if (nextIdx === -1) {
+      this._handleGameOver();
+      return;
+    }
+
+    this._switchActivePokemon(nextIdx, { free: true });
+  }
+
+  _handleSwitchMonster(e) {
+    const { to } = e.detail;
+    if (to === this._activePartyIdx) return;
+    const target = player.monsters[to];
+    if (!target || (target.currentHp ?? target.life) <= 0) return;
+    this._switchActivePokemon(to, { free: false });
+  }
+
+  async _switchActivePokemon(toIdx, { free = false } = {}) {
+    const activeMonster = this.objects.find(m => m._isPlayer);
+    const enemyMonster = this.objects.find(m => !m._isPlayer);
+
+    if (activeMonster) {
+      player.monsters[this._activePartyIdx].currentHp = activeMonster._hp;
+      activeMonster.Destroy();
+    }
+    this.objects = this.objects.filter(m => !m._isPlayer);
+
+    this.Events["monsterPlayerHpChanged"] = new EventDispatcher();
+
+    this._activePartyIdx = toIdx;
+    const newInfo = player.monsters[toIdx];
+
+    const newPlayer = new Monster(
+      this.scene, { x: 0, y: 0.5, z: 6 }, 2.5, this.Events, newInfo, true, this.camera
+    );
+    newPlayer.setOpponent(Enemy.selectedMonster);
+    enemyMonster?.setOpponent(newInfo);
+    this.objects.push(newPlayer);
+
+    const partyHud = this._gameElement?.querySelector("party-hud");
+    if (partyHud) {
+      partyHud.setAttribute("active", String(toIdx));
+      partyHud.setAttribute("party", JSON.stringify(player.monsters));
+    }
+
+    if (!free) {
+      EnemyTurn();
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      if (enemyMonster) {
+        enemyMonster._playAttackAnimation(0);
+        const damage = enemyMonster._calculateDamage(enemyMonster._information, newInfo);
+        this.Events["monsterPlayerHpChanged"].dispatchEvent({ type: "monsterPlayerHpChanged", damage });
+      }
+      PlayerTurn();
+    } else {
+      PlayerTurn();
+    }
   }
 
   _renderer() {
@@ -166,11 +241,17 @@ export default class BattleScene {
     this._playerInfo = playerInfo;
     this._currentEnemyName = enemyInfo.name;
     player.selectedMonster = playerInfo;
+    player.monsters = [playerInfo];
     Enemy.selectedMonster = enemyInfo;
 
     this._gameElement.removeChild(this._loadingElement);
     const battleMenu = document.createElement("battle-menu");
     this._gameElement.appendChild(battleMenu);
+
+    const partyHud = document.createElement("party-hud");
+    partyHud.setAttribute("party", JSON.stringify(player.monsters));
+    partyHud.setAttribute("active", "0");
+    this._gameElement.appendChild(partyHud);
 
     // player bottom-right of arena, enemy top-left — mirrors original FBX positions
     const playerMonster = new Monster(this.scene, { x: 0, y: 0.5, z: 6 }, 2.5, this.Events, playerInfo, true, this.camera);
@@ -205,8 +286,9 @@ export default class BattleScene {
   DestroyScene() {
     cancelAnimationFrame(this._gameLoop);
     this.renderer.setAnimationLoop(null);
-    document.removeEventListener("gameOver", this._onGameOver);
     document.removeEventListener("enemyDefeated", this._onEnemyDefeated);
+    document.removeEventListener("playerFainted", this._onPlayerFainted);
+    document.removeEventListener("switchMonster", this._onSwitchMonster);
     window.removeEventListener("resize", this._onWindowResize.bind(this));
     const battleMenu = this._gameElement?.querySelector("battle-menu");
     if (battleMenu) battleMenu.remove();
@@ -214,6 +296,8 @@ export default class BattleScene {
     if (gameOver) gameOver.remove();
     const rewardScreen = this._gameElement?.querySelector("item-reward-screen");
     if (rewardScreen) rewardScreen.remove();
+    const partyHud = this._gameElement?.querySelector("party-hud");
+    if (partyHud) partyHud.remove();
     document.querySelectorAll("monster-hp-element").forEach(el => el.remove());
     this.renderer.dispose();
     this.scene = undefined;

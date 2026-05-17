@@ -3,16 +3,30 @@ import { player } from "../../utils/monsters.js";
 
 class ItemRewardScreen extends HTMLElement {
   connectedCallback() {
-    const all = Object.values(itemsList);
-    const picks = [...all].sort(() => Math.random() - 0.5).slice(0, 3);
-    this._render(picks);
+    const enemy = JSON.parse(this.getAttribute("enemy") ?? "null");
+    const hasSlot = player.monsters.length < 3;
+    const canCatch = enemy && hasSlot;
+
+    const allItems = Object.values(itemsList);
+    const itemPicks = [...allItems].sort(() => Math.random() - 0.5).slice(0, canCatch ? 2 : 3);
+
+    const cards = canCatch ? this._insertAt(itemPicks, { _isPokemon: true, monster: enemy }) : itemPicks;
+
+    this._renderScreen(cards, canCatch);
+  }
+
+  _insertAt(arr, item) {
+    const pos = Math.floor(Math.random() * (arr.length + 1));
+    const result = [...arr];
+    result.splice(pos, 0, item);
+    return result;
   }
 
   _icon(category) {
     return { potion: "🧪", stat_boost: "⚡" }[category] ?? "🎁";
   }
 
-  _render(items) {
+  _renderScreen(cards, canCatch) {
     const shadow = this.attachShadow({ mode: "open" });
     shadow.innerHTML = `
       <style>
@@ -47,6 +61,7 @@ class ItemRewardScreen extends HTMLElement {
         .cards {
           display: flex;
           gap: 1.25rem;
+          align-items: stretch;
         }
 
         .card {
@@ -55,9 +70,11 @@ class ItemRewardScreen extends HTMLElement {
           border-radius: 16px;
           padding: 2rem 1.5rem;
           width: 180px;
+          min-height: 240px;
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           gap: 0.75rem;
           cursor: pointer;
           color: #fff;
@@ -72,6 +89,49 @@ class ItemRewardScreen extends HTMLElement {
           animation: slideUp 0.4s both cubic-bezier(0.34, 1.56, 0.64, 1), pulse 2s infinite;
         }
 
+        /* Pokemon card */
+        .card-pokemon {
+          padding: 1.5rem 1.5rem 2rem;
+          gap: 0.5rem;
+          position: relative;
+        }
+
+        .catch-badge {
+          position: absolute;
+          top: -10px;
+          background: #e53935;
+          color: white;
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          padding: 3px 10px;
+          border-radius: 20px;
+          border: 2px solid white;
+          text-transform: uppercase;
+        }
+
+        .poke-sprite {
+          width: 80px;
+          height: 80px;
+          object-fit: contain;
+          image-rendering: pixelated;
+          animation: bounce 0.7s infinite alternate ease-in-out;
+        }
+
+        .poke-name {
+          font-size: 1.05rem;
+          font-weight: 700;
+          text-transform: capitalize;
+          text-align: center;
+        }
+
+        .poke-desc {
+          font-size: 0.75rem;
+          color: #90caf9;
+          text-align: center;
+        }
+
+        /* Item card */
         .icon {
           font-size: 2.5rem;
           line-height: 1;
@@ -106,30 +166,56 @@ class ItemRewardScreen extends HTMLElement {
           70%  { transform: scale(1);    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
           100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
         }
+
+        @keyframes bounce {
+          from { transform: translateY(0); }
+          to   { transform: translateY(-8px); }
+        }
       </style>
 
       <h1 class="title">Vitória!</h1>
-      <p class="subtitle">Escolha um item como recompensa</p>
+      <p class="subtitle">Escolha ${canCatch ? "uma recompensa" : "um item como recompensa"}</p>
       <div class="cards">
-        ${items.map(item => `
-          <button class="card" data-id="${item.id}">
-            <span class="icon">${this._icon(item.category)}</span>
-            <span class="name">${item.name}</span>
-            <span class="desc">${item.description}</span>
-          </button>
-        `).join("")}
+        ${cards.map(card => card._isPokemon ? this._pokemonCard(card.monster) : this._itemCard(card)).join("")}
       </div>
     `;
 
     shadow.querySelectorAll(".card").forEach(card => {
       card.addEventListener("click", () => {
-        const itemId = card.dataset.id;
-        player.inventory[itemId] = (player.inventory[itemId] ?? 0) + 1;
-        document.dispatchEvent(new CustomEvent("inventoryChanged"));
-        document.dispatchEvent(new CustomEvent("rewardSelected", { detail: { itemId } }));
+        if (card.dataset.type === "pokemon") {
+          const monster = JSON.parse(card.dataset.monster);
+          document.dispatchEvent(new CustomEvent("rewardSelected", { detail: { type: "pokemon", pokemon: monster } }));
+        } else {
+          const itemId = card.dataset.id;
+          player.inventory[itemId] = (player.inventory[itemId] ?? 0) + 1;
+          document.dispatchEvent(new CustomEvent("inventoryChanged"));
+          document.dispatchEvent(new CustomEvent("rewardSelected", { detail: { type: "item", itemId } }));
+        }
         this.remove();
       });
     });
+  }
+
+  _itemCard(item) {
+    return `
+      <button class="card" data-type="item" data-id="${item.id}">
+        <span class="icon">${this._icon(item.category)}</span>
+        <span class="name">${item.name}</span>
+        <span class="desc">${item.description}</span>
+      </button>
+    `;
+  }
+
+  _pokemonCard(monster) {
+    const monsterJson = JSON.stringify(monster).replace(/'/g, "&#39;");
+    return `
+      <button class="card card-pokemon" data-type="pokemon" data-monster='${monsterJson}'>
+        <span class="catch-badge">Capturar</span>
+        <img class="poke-sprite" src="${monster.sprites?.front ?? ""}">
+        <span class="poke-name">${monster.name}</span>
+        <span class="poke-desc">Adicionar ao time!</span>
+      </button>
+    `;
   }
 }
 
