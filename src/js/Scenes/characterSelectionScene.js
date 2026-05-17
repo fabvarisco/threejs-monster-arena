@@ -15,6 +15,10 @@ export default class CharacterSelectionScene {
     this._previewSprite = undefined;
     this._infoElement = undefined;
     this._boundOnWindowResize = this._onWindowResize.bind(this);
+    this._fadeDuration = 0.25;
+    this._fadeState = "idle"; // "fadeOut" | "loading" | "fadeIn" | "idle"
+    this._fadeProgress = 0;
+    this._pendingMonster = null;
     this._init();
   }
 
@@ -37,7 +41,7 @@ export default class CharacterSelectionScene {
 
     this._infoElement = document.createElement("monster-info-element");
     this._gameElement.appendChild(this._infoElement);
-
+    
     list.addEventListener("changeMonster", (e) => {
       this._loadSelectedMonster(e.detail.monster);
       this._infoElement.setAttribute("monster", JSON.stringify(e.detail.monster));
@@ -105,7 +109,19 @@ export default class CharacterSelectionScene {
 
   _createObject() {}
 
-  async _loadSelectedMonster(monster) {
+  _loadSelectedMonster(monster) {
+    this._pendingMonster = monster;
+    if (this._previewSprite && this._fadeState !== "fadeOut") {
+      this._fadeState = "fadeOut";
+      this._fadeProgress = 0;
+    } else if (!this._previewSprite && this._fadeState === "idle") {
+      this._startLoadingMonster(monster);
+    }
+  }
+
+  async _startLoadingMonster(monster) {
+    this._fadeState = "loading";
+
     if (this._previewSprite) {
       this.scene.remove(this._previewSprite);
       this._previewSprite.material.map?.dispose();
@@ -116,11 +132,14 @@ export default class CharacterSelectionScene {
     const texture = await new THREE.TextureLoader().loadAsync(monster.sprites.front);
     texture.magFilter = THREE.NearestFilter;
 
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
     this._previewSprite = new THREE.Sprite(material);
     this._previewSprite.position.set(0, 1.5, 0);
     this._previewSprite.scale.setScalar(3);
     this.scene.add(this._previewSprite);
+
+    this._fadeState = "fadeIn";
+    this._fadeProgress = 0;
   }
 
   _onWindowResize() {
@@ -129,11 +148,31 @@ export default class CharacterSelectionScene {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
+  _updateFade(timeElapsed) {
+    if (this._fadeState === "fadeOut") {
+      this._fadeProgress += timeElapsed / this._fadeDuration;
+      if (this._fadeProgress >= 1) {
+        this._startLoadingMonster(this._pendingMonster);
+      } else if (this._previewSprite) {
+        this._previewSprite.material.opacity = 1 - this._fadeProgress;
+      }
+    } else if (this._fadeState === "fadeIn") {
+      this._fadeProgress += timeElapsed / this._fadeDuration;
+      if (this._fadeProgress >= 1) {
+        this._previewSprite.material.opacity = 1;
+        this._fadeState = "idle";
+      } else if (this._previewSprite) {
+        this._previewSprite.material.opacity = this._fadeProgress;
+      }
+    }
+  }
+
   _sceneLoop() {
     this._gameLoop = requestAnimationFrame((t) => {
-      if (this._lastFrameTime === null) this._lastFrameTime = t;
-      this._render();
+      const timeElapsed = this._lastFrameTime === null ? 0 : (t - this._lastFrameTime) / 1000;
       this._lastFrameTime = t;
+      this._updateFade(timeElapsed);
+      this._render();
       this._sceneLoop();
     });
   }

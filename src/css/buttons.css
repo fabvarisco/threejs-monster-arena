@@ -32,8 +32,77 @@
     margin: 20px;
 }
 
-.btn-item{
-    margin-top: 18px;
+.items-panel {
+    display: flex;
+    flex-direction: column;
+    width: 264px;
+}
+
+#item-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    max-height: 22vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: white transparent;
+    padding: 4px 2px;
+}
+
+.btn-item-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border-radius: 16px;
+    border: white 3px solid;
+    background: black;
+    color: white;
+    cursor: pointer;
+    font-family: Nunito;
+    transition: opacity 0.2s;
+}
+
+.btn-item-card:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.btn-item-card:not(:disabled):hover {
+    animation: pulse 2s infinite;
+}
+
+.item-card-name {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.item-card-qty {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.item-card-qty--empty {
+    color: #888;
+}
+
+.items-back {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.items-empty {
+    color: white;
+    font-family: Nunito;
+    font-size: 14px;
+    text-align: center;
+    margin: 16px 0;
+    opacity: 0.6;
+    grid-column: 1 / -1;
 }
 
 

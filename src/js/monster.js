@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { EnemyTurn, PlayerTurn } from "../utils/utils";
 import { getTypeMultiplier } from "../utils/typeChart";
+import itemsList from "../utils/items";
+import { player } from "../utils/monsters";
 
 const vertexShader = `
   uniform float uShake;
@@ -111,6 +113,10 @@ export default class Monster {
   // ---
 
   Destroy() {
+    if (this._onUseItem) {
+      document.removeEventListener("useItem", this._onUseItem);
+      this._onUseItem = null;
+    }
     if (this._mesh) {
       this._scene.remove(this._mesh);
       this._mesh.geometry.dispose();
@@ -154,8 +160,17 @@ export default class Monster {
 
       document.getElementById("attack1").addEventListener("click", () => onAttack(0));
       document.getElementById("attack2").addEventListener("click", () => onAttack(1));
-      document.getElementById("item1").addEventListener("click", () => EnemyTurn());
-      document.getElementById("item2").addEventListener("click", () => EnemyTurn());
+
+      this._onUseItem = (e) => {
+        const { itemId } = e.detail;
+        const item = itemsList[itemId];
+        if (!item || (player.inventory[itemId] ?? 0) <= 0) return;
+        player.inventory[itemId]--;
+        item.func(this);
+        document.dispatchEvent(new CustomEvent("inventoryChanged"));
+        EnemyTurn();
+      };
+      document.addEventListener("useItem", this._onUseItem);
 
       this._events["monsterPlayerHpChanged"].addEventListener("monsterPlayerHpChanged", (e) => {
         this._playDamageAnimation();

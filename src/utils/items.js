@@ -1,36 +1,33 @@
- const itemsList = {
-  potion: {
-    name: "",
-    img: "",
-    func: (monster) => {
-      console.log("Heal monster health " + monster.name);
+import itemsData from "./items.json";
+
+function buildItemFunc({ stat, type, value }) {
+  return (monster) => {
+    if (type === "restore") {
+      monster._hp = Math.min(monster._maxHp, monster._hp + value);
+      monster._updateHtmlContainer();
+    } else if (type === "restore_full") {
+      monster._hp = monster._maxHp;
+      monster._updateHtmlContainer();
+    } else if (type === "permanent_add") {
+      if (stat === "life") {
+        monster._maxHp += value;
+        monster._hp = Math.min(monster._hp + value, monster._maxHp);
+        monster._updateHtmlContainer();
+      } else {
+        monster._information[stat] += value;
+      }
+    }
+  };
+}
+
+const itemsList = Object.fromEntries(
+  itemsData.items.map((item) => [
+    item.id,
+    {
+      ...item,
+      func: buildItemFunc(item.effect),
     },
-    price: 10
-  },
-  damageBoost: {
-    name: "",
-    img: "",
-    func: (monster) => {
-      console.log("Damage Boost monster health " + monster.name);
-    },
-    price: 10
-  },
-  revive: {
-    name: "",
-    img: "",
-    func: (monster) => {
-      console.log("Revive monster health " + monster.name);
-    },
-    price: 10
-  },
-  healthBoost: {
-    name: "",
-    img: "",
-    func: (monster) => {
-      console.log("Health Boost monster health " + monster.name);
-    },
-    price: 10
-  },
-};
+  ])
+);
 
 export default itemsList;

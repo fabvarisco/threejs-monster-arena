@@ -1,0 +1,87 @@
+{
+  "items": [
+    {
+      "id": "potion_weak",
+      "name": "Poção Fraca",
+      "description": "Restaura 30 HP do monstro.",
+      "category": "potion",
+      "effect": {
+        "stat": "hp",
+        "type": "restore",
+        "value": 30
+      },
+      "price": 50,
+      "sellPrice": 25,
+      "usableInBattle": true
+    },
+    {
+      "id": "potion_medium",
+      "name": "Poção Média",
+      "description": "Restaura 80 HP do monstro.",
+      "category": "potion",
+      "effect": {
+        "stat": "hp",
+        "type": "restore",
+        "value": 80
+      },
+      "price": 120,
+      "sellPrice": 60,
+      "usableInBattle": true
+    },
+    {
+      "id": "potion_full",
+      "name": "Poção Completa",
+      "description": "Restaura todo o HP do monstro.",
+      "category": "potion",
+      "effect": {
+        "stat": "hp",
+        "type": "restore_full"
+      },
+      "price": 300,
+      "sellPrice": 150,
+      "usableInBattle": true
+    },
+    {
+      "id": "attack_boost",
+      "name": "Elixir de Força",
+      "description": "Aumenta permanentemente o ataque base do monstro em 5.",
+      "category": "stat_boost",
+      "effect": {
+        "stat": "damage",
+        "type": "permanent_add",
+        "value": 5
+      },
+      "price": 500,
+      "sellPrice": 250,
+      "usableInBattle": false
+    },
+    {
+      "id": "defense_boost",
+      "name": "Elixir de Aço",
+      "description": "Aumenta permanentemente a defesa base do monstro em 5.",
+      "category": "stat_boost",
+      "effect": {
+        "stat": "defense",
+        "type": "permanent_add",
+        "value": 5
+      },
+      "price": 500,
+      "sellPrice": 250,
+      "usableInBattle": false
+    },
+    {
+      "id": "hp_boost",
+      "name": "Elixir de Vitalidade",
+      "description": "Aumenta permanentemente o HP máximo do monstro em 20.",
+      "category": "stat_boost",
+      "effect": {
+        "stat": "life",
+        "type": "permanent_add",
+        "value": 20
+      },
+      "price": 600,
+      "sellPrice": 300,
+      "usableInBattle": false
+    }
+  ]
+}

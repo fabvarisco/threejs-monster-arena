@@ -86,7 +86,7 @@ export default class BattleScene {
 
     const playerMonster = this.objects.find(m => m._isPlayer);
     const newEnemy = new Monster(
-      this.scene, { x: -4, y: 1, z: -3 }, 2.5, this.Events, enemyInfo, false, this.camera
+      this.scene,{ x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyInfo, false, this.camera
     );
     newEnemy.setOpponent(this._playerInfo);
     playerMonster?.setOpponent(enemyInfo);
