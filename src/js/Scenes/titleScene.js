@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { vpWidth, vpHeight, vpAspect } from "../../utils/viewport";
 
 
 export default class TitleScene {
@@ -42,7 +43,7 @@ export default class TitleScene {
     this.renderer.shadowMap.type = THREE.VSMShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(vpWidth(), vpHeight());
   }
 
   _scene() {
@@ -54,7 +55,7 @@ export default class TitleScene {
   _camera() {
     this.camera = new THREE.PerspectiveCamera(
       60,
-      window.innerWidth / window.innerHeight,
+      vpAspect(),
       1,
       1000
     );
@@ -90,9 +91,9 @@ export default class TitleScene {
   _createObject() {}
 
   _onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.aspect = vpAspect();
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(vpWidth(), vpHeight());
   }
 
   _sceneLoop() {

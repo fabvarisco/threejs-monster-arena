@@ -26,7 +26,7 @@ class MonsterHp extends HTMLElement {
           left: 3%;
         }
         :host(:not([player])) {
-          top: 3%;
+          top: calc(64px + 12px);
           right: 3%;
         }
         .name {

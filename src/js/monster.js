@@ -140,7 +140,7 @@ export default class Monster {
   _calculateDamage(attackerInfo, defenderInfo, attackIndex = 0) {
     const atk = attackerInfo.damage;
     const def = Math.max(1, defenderInfo.defense);
-    const base = atk - def;
+    const base = Math.max(1, atk - Math.floor(def / 2));
     const attackType = attackerInfo.attacks?.[attackIndex]?.type ?? attackerInfo.type;
     const defenderTypes = defenderInfo.types ?? [defenderInfo.type ?? "normal"];
     const typeMultiplier = getTypeMultiplier(attackType, defenderTypes);

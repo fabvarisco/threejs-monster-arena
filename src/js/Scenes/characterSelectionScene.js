@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { POKEMON_ROSTER } from "../../utils/monsters";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
+import { vpWidth, vpHeight, vpAspect } from "../../utils/viewport";
 
 export default class CharacterSelectionScene {
   constructor() {
@@ -70,7 +71,7 @@ export default class CharacterSelectionScene {
     this.renderer.shadowMap.type = THREE.VSMShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(vpWidth(), vpHeight());
   }
 
   _scene() {
@@ -83,7 +84,7 @@ export default class CharacterSelectionScene {
   _camera() {
     this.camera = new THREE.PerspectiveCamera(
       60,
-      window.innerWidth / window.innerHeight,
+      vpAspect(),
       1,
       1000
     );
@@ -143,9 +144,9 @@ export default class CharacterSelectionScene {
   }
 
   _onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.aspect = vpAspect();
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(vpWidth(), vpHeight());
   }
 
   _updateFade(timeElapsed) {
