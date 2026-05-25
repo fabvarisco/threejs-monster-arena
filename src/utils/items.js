@@ -12,6 +12,7 @@ function buildItemFunc({ stat, type, value }) {
       if (stat === "life") {
         monster._maxHp += value;
         monster._hp = Math.min(monster._hp + value, monster._maxHp);
+        monster._information.life = monster._maxHp;
         monster._updateHtmlContainer();
       } else {
         monster._information[stat] += value;

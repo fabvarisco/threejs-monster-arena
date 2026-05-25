@@ -75,6 +75,8 @@ export default class BattleScene {
   }
 
   _handleInventoryChanged() {
+    const activeMonster = this.objects.find(m => m._isPlayer);
+    if (activeMonster) player.monsters[this._activePartyIdx].currentHp = activeMonster._hp;
     const panel = this._gameElement?.querySelector("monster-roster-panel:not([side])");
     if (panel) panel.setAttribute("party", JSON.stringify(player.monsters));
   }
