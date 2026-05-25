@@ -37,6 +37,7 @@ export default class TitleScene {
   _renderer() {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
+      alpha: true,
       canvas: document.getElementById("app"),
     });
     this.renderer.shadowMap.enabled = true;
@@ -44,12 +45,12 @@ export default class TitleScene {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(vpWidth(), vpHeight());
+    this.renderer.setClearColor(0x000000, 0);
   }
 
   _scene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xcccccc);
-    this.scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
+    document.body.style.backgroundImage = "url('/assets/body_bg.png')";
   }
 
   _camera() {
@@ -119,6 +120,7 @@ export default class TitleScene {
     if (titleScreenElement) this._gameElement.removeChild(titleScreenElement);
 
     this.controls.dispose();
+    document.body.style.backgroundImage = "";
     this.renderer.dispose();
     this.scene = undefined;
     this.camera = undefined;

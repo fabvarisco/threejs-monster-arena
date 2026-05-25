@@ -65,6 +65,7 @@ export default class CharacterSelectionScene {
   _renderer() {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
+      alpha: true,
       canvas: document.getElementById("app"),
     });
     this.renderer.shadowMap.enabled = true;
@@ -72,13 +73,12 @@ export default class CharacterSelectionScene {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(vpWidth(), vpHeight());
+    this.renderer.setClearColor(0x000000, 0);
   }
 
   _scene() {
     this.scene = new THREE.Scene();
-    new THREE.TextureLoader().loadAsync("assets/background.jpg").then(texture => {
-      this.scene.background = texture;
-    });
+    document.body.style.backgroundImage = "url('/assets/body_bg.png')";
   }
 
   _camera() {
@@ -196,6 +196,7 @@ export default class CharacterSelectionScene {
       this._previewSprite.material.dispose();
     }
 
+    document.body.style.backgroundImage = "";
     this.renderer.dispose();
     this.scene = undefined;
     this.camera = undefined;

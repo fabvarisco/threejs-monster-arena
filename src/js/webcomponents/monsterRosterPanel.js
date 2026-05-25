@@ -20,7 +20,7 @@ class MonsterRosterPanel extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["party", "side", "hide-stats"];
+    return ["party", "side", "hide-stats", "active"];
   }
 
   attributeChangedCallback(name, _old, newValue) {
@@ -34,18 +34,19 @@ class MonsterRosterPanel extends HTMLElement {
     this._render();
   }
 
-  _monsterCard(m) {
+  _monsterCard(m, index) {
     const maxHp = m.life;
     const currentHp = m.currentHp ?? maxHp;
     const hpPct = Math.max(0, Math.min(1, currentHp / maxHp));
     const fainted = currentHp <= 0;
+    const active = Number(this.getAttribute("active") ?? 0) === index;
     const color = hpColor(hpPct);
     const typeBadges = (m.types ?? [m.type].filter(Boolean))
       .map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t] ?? "#777"}">${t}</span>`)
       .join("");
 
     return `
-      <div class="card${fainted ? " fainted" : ""}">
+      <div class="card${fainted ? " fainted" : ""}${active ? " active" : ""}">
         <img class="sprite" src="${m.sprites?.front ?? ""}" alt="${m.name}" />
         <div class="info">
           <div class="top-row">
@@ -100,6 +101,9 @@ class MonsterRosterPanel extends HTMLElement {
           padding: 8px 14px 8px 8px;
           width: 280px;
           box-sizing: border-box;
+        }
+        .card.active {
+          border-color: white;
         }
         .card.fainted {
           filter: grayscale(1);
@@ -193,7 +197,7 @@ class MonsterRosterPanel extends HTMLElement {
           margin-right: 2px;
         }
       </style>
-      ${this._party.map(m => this._monsterCard(m)).join("")}
+      ${this._party.map((m, i) => this._monsterCard(m, i)).join("")}
     `;
   }
 }

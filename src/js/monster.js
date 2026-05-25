@@ -8,12 +8,14 @@ const vertexShader = `
   uniform float uShake;
   uniform float uTime;
   uniform float uPulse;
+  uniform float uOffsetX;
   varying vec2 vUv;
   void main() {
     vUv = uv;
     vec3 pos = position;
     pos.x += sin(uTime * 40.0) * 0.15 * uShake;
     pos *= 1.0 + sin(uPulse * 3.14159) * 0.25;
+    pos.x += uOffsetX;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
   }
 `;
@@ -21,11 +23,12 @@ const vertexShader = `
 const fragmentShader = `
   uniform sampler2D uTexture;
   uniform float uFlash;
+  uniform float uOpacity;
   varying vec2 vUv;
   void main() {
     vec4 texColor = texture2D(uTexture, vUv);
     if (texColor.a < 0.1) discard;
-    gl_FragColor = vec4(mix(texColor.rgb, vec3(1.0, 0.2, 0.2), uFlash), texColor.a);
+    gl_FragColor = vec4(mix(texColor.rgb, vec3(1.0, 0.2, 0.2), uFlash), texColor.a * uOpacity);
   }
 `;
 
@@ -48,6 +51,11 @@ export default class Monster {
     this._flashDuration = 500;
     this._pulseStartTime = null;
     this._pulseDuration = 400;
+    this._exitAnimStartTime = null;
+    this._exitAnimDuration = 350;
+    this._enterAnimStartTime = null;
+    this._enterAnimDuration = 350;
+    this._pendingEnterAnim = false;
 
     this._init();
   }
@@ -73,6 +81,8 @@ export default class Monster {
         uShake: { value: 0.0 },
         uTime: { value: 0.0 },
         uPulse: { value: 0.0 },
+        uOpacity: { value: 1.0 },
+        uOffsetX: { value: 0.0 },
       },
       vertexShader,
       fragmentShader,
@@ -86,6 +96,11 @@ export default class Monster {
     this._mesh.position.set(this._position.x, this._position.y, this._position.z);
     this._mesh.scale.setScalar(this._scale);
     this._scene.add(this._mesh);
+
+    if (this._pendingEnterAnim) {
+      this._pendingEnterAnim = false;
+      this._playEnterAnimation();
+    }
   }
 
   setOpponent(info) {
@@ -109,6 +124,21 @@ export default class Monster {
   }
 
   _playDeathAnimation() {}
+
+  _playExitAnimation() {
+    this._exitAnimStartTime = performance.now();
+    return new Promise(resolve => setTimeout(resolve, this._exitAnimDuration));
+  }
+
+  _playEnterAnimation() {
+    if (!this._material) {
+      this._pendingEnterAnim = true;
+      return;
+    }
+    this._material.uniforms.uOpacity.value = 0;
+    this._material.uniforms.uOffsetX.value = 3;
+    this._enterAnimStartTime = performance.now();
+  }
 
   // ---
 
@@ -249,6 +279,18 @@ export default class Monster {
       const t = Math.max(0, 1 - elapsed / this._pulseDuration);
       this._material.uniforms.uPulse.value = t;
       if (t === 0) this._pulseStartTime = null;
+    }
+    if (this._exitAnimStartTime !== null && this._material) {
+      const t = Math.max(0, 1 - (performance.now() - this._exitAnimStartTime) / this._exitAnimDuration);
+      this._material.uniforms.uOpacity.value = t;
+      this._material.uniforms.uOffsetX.value = -3 * (1 - t);
+      if (t === 0) this._exitAnimStartTime = null;
+    }
+    if (this._enterAnimStartTime !== null && this._material) {
+      const t = Math.min(1, (performance.now() - this._enterAnimStartTime) / this._enterAnimDuration);
+      this._material.uniforms.uOpacity.value = t;
+      this._material.uniforms.uOffsetX.value = 3 * (1 - t);
+      if (t === 1) this._enterAnimStartTime = null;
     }
   }
 }

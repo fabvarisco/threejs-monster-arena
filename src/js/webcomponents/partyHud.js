@@ -1,5 +1,5 @@
 class PartyHud extends HTMLElement {
-  static get observedAttributes() { return ["party", "active"]; }
+  static get observedAttributes() { return ["party", "active", "disabled"]; }
 
   constructor() {
     super();
@@ -93,6 +93,12 @@ class PartyHud extends HTMLElement {
           box-shadow: 0 0 0 2px white;
         }
 
+        :host([disabled]) .ball.bench {
+          cursor: not-allowed;
+          opacity: 0.45;
+          pointer-events: none;
+        }
+
         .ball.fainted {
           width: 60px;
           height: 60px;
@@ -134,13 +140,15 @@ class PartyHud extends HTMLElement {
       ${[0, 1, 2].map(i => this._slot(party[i] ?? null, i === activeIdx, i)).join("")}
     `;
 
-    this.shadowRoot.querySelectorAll(".ball.bench").forEach(ball => {
-      ball.addEventListener("click", () => {
-        document.dispatchEvent(new CustomEvent("switchMonster", {
-          detail: { to: parseInt(ball.dataset.idx, 10) },
-        }));
+    if (!this.hasAttribute("disabled")) {
+      this.shadowRoot.querySelectorAll(".ball.bench").forEach(ball => {
+        ball.addEventListener("click", () => {
+          document.dispatchEvent(new CustomEvent("switchMonster", {
+            detail: { to: parseInt(ball.dataset.idx, 10) },
+          }));
+        });
       });
-    });
+    }
   }
 
   _slot(monster, isActive, idx) {

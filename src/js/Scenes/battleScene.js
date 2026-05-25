@@ -23,6 +23,7 @@ export default class BattleScene {
     this._onEnemyDefeated = this._handleEnemyDefeated.bind(this);
     this._onPlayerFainted = this._handlePlayerFainted.bind(this);
     this._onSwitchMonster = this._handleSwitchMonster.bind(this);
+    this._onInventoryChanged = this._handleInventoryChanged.bind(this);
     this._playerInfo = null;
     this._currentEnemyName = null;
     this._activePartyIdx = 0;
@@ -66,10 +67,16 @@ export default class BattleScene {
     document.addEventListener("enemyDefeated", this._onEnemyDefeated);
     document.addEventListener("playerFainted", this._onPlayerFainted);
     document.addEventListener("switchMonster", this._onSwitchMonster);
+    document.addEventListener("inventoryChanged", this._onInventoryChanged);
   }
 
   _maskEnemyParty(monsters) {
     return monsters.map(({ damage: _d, defense: _def, speed: _spd, attacks: _a, ...rest }) => rest);
+  }
+
+  _handleInventoryChanged() {
+    const panel = this._gameElement?.querySelector("monster-roster-panel:not([side])");
+    if (panel) panel.setAttribute("party", JSON.stringify(player.monsters));
   }
 
   _handleEnemyHpChanged(e) {
@@ -170,11 +177,15 @@ export default class BattleScene {
   }
 
   async _switchActivePokemon(toIdx, { free = false } = {}) {
+    const partyHudSwitch = this._gameElement?.querySelector("party-hud");
+    if (partyHudSwitch) partyHudSwitch.setAttribute("disabled", "");
+
     const activeMonster = this.objects.find(m => m._isPlayer);
     const enemyMonster = this.objects.find(m => !m._isPlayer);
 
     if (activeMonster) {
       player.monsters[this._activePartyIdx].currentHp = activeMonster._hp;
+      await activeMonster._playExitAnimation();
       activeMonster.Destroy();
     }
     this.objects = this.objects.filter(m => !m._isPlayer);
@@ -188,6 +199,7 @@ export default class BattleScene {
       this.scene, { x: 0, y: 0.5, z: 6 }, 2.5, this.Events, newInfo, true, this.camera
     );
     newPlayer.setOpponent(Enemy.selectedMonster);
+    newPlayer._playEnterAnimation();
     enemyMonster?.setOpponent(newInfo);
     this.objects.push(newPlayer);
 
@@ -197,7 +209,10 @@ export default class BattleScene {
       partyHud.setAttribute("party", JSON.stringify(player.monsters));
     }
     const rosterPanel = this._gameElement?.querySelector("monster-roster-panel");
-    if (rosterPanel) rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
+    if (rosterPanel) {
+      rosterPanel.setAttribute("active", String(toIdx));
+      rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
+    }
 
     if (!free) {
       EnemyTurn();
@@ -229,13 +244,9 @@ export default class BattleScene {
   }
 
   _camera() {
-    this.camera = new THREE.PerspectiveCamera(
-      60,
-      vpAspect(),
-      1,
-      1000
-    );
-    this.camera.position.set(0.73,0.95, 8);
+    this.camera = new THREE.PerspectiveCamera(60, vpAspect(), 1, 1000);
+    //this.camera.position.set(2.82, 2.01, 8.75);
+    this.camera.position.set(2, 2, 12); 
   }
 
   _light() {
@@ -286,6 +297,7 @@ export default class BattleScene {
     this._gameElement.appendChild(partyHud);
 
     const rosterPanel = document.createElement("monster-roster-panel");
+    rosterPanel.setAttribute("active", "0");
     rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
     this._gameElement.appendChild(rosterPanel);
 
@@ -333,6 +345,7 @@ export default class BattleScene {
     document.removeEventListener("enemyDefeated", this._onEnemyDefeated);
     document.removeEventListener("playerFainted", this._onPlayerFainted);
     document.removeEventListener("switchMonster", this._onSwitchMonster);
+    document.removeEventListener("inventoryChanged", this._onInventoryChanged);
     window.removeEventListener("resize", this._onWindowResize.bind(this));
     const battleMenu = this._gameElement?.querySelector("battle-menu");
     if (battleMenu) battleMenu.remove();
@@ -344,6 +357,7 @@ export default class BattleScene {
     if (partyHud) partyHud.remove();
     this._gameElement?.querySelectorAll("monster-roster-panel").forEach(el => el.remove());
     document.querySelectorAll("monster-hp-element").forEach(el => el.remove());
+    this.controls?.dispose();
     this.renderer.dispose();
     this.scene = undefined;
     this.camera = undefined;
