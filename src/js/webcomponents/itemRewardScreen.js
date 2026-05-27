@@ -173,8 +173,8 @@ class ItemRewardScreen extends HTMLElement {
         }
       </style>
 
-      <h1 class="title">Vitória!</h1>
-      <p class="subtitle">Escolha ${canCatch ? "uma recompensa" : "um item como recompensa"}</p>
+      <h1 class="title">Victory!</h1>
+      <p class="subtitle">Choose ${canCatch ? "a reward" : "an item as reward"}</p>
       <div class="cards">
         ${cards.map(card => card._isPokemon ? this._pokemonCard(card.monster) : this._itemCard(card)).join("")}
       </div>

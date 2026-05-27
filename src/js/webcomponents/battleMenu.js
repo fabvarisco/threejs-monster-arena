@@ -52,7 +52,7 @@ class BattleMenu extends HTMLElement {
     const availableItems = battleItems.filter((item) => (player.inventory[item.id] ?? 0) > 0);
 
     if (availableItems.length === 0) {
-      container.innerHTML = `<p class="items-empty">Nenhum item disponível.</p>`;
+      container.innerHTML = `<p class="items-empty">No items available.</p>`;
       return;
     }
 

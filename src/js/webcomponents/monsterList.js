@@ -118,8 +118,8 @@ class MonsterList extends HTMLElement {
       </style>
 
       <div class="wrapper">
-        <span class="panel-title">Escolha seu Pokémon</span>
-        <input id="search" class="search-input" placeholder="🔍 Buscar..." autocomplete="off" />
+        <span class="panel-title">Choose your Pokémon</span>
+        <input id="search" class="search-input" placeholder="🔍 Search..." autocomplete="off" />
         <div class="select-monster-card-container"></div>
         <button id="start-battle" class="btn select-monster">Select Monster</button>
       </div>
