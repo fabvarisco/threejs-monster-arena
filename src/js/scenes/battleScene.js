@@ -72,6 +72,14 @@ export default class BattleScene {
     document.addEventListener("playerHpChanged", this._onPlayerHpChanged);
   }
 
+  _spriteParams(info) {
+    const scale = info?.height
+      ? Math.min(4.0, Math.max(1.5, 2.5 * Math.pow(info.height / 10, 0.4)))
+      : 2.5;
+    const GROUND_Y = -0.75; // derived from original y:0.5 scale:2.5 → bottom at 0.5-1.25
+    return { scale, y: GROUND_Y + scale / 2 };
+  }
+
   _maskEnemyParty(monsters) {
     return monsters.map(({ damage: _d, defense: _def, speed: _spd, attacks: _a, ...rest }) => rest);
   }
@@ -152,8 +160,9 @@ export default class BattleScene {
     if (enemyPanel) enemyPanel.setAttribute("party", JSON.stringify(this._maskEnemyParty(Enemy.monsters)));
 
     const playerMonster = this.objects.find(m => m._isPlayer);
+    const { scale: nes, y: ney } = this._spriteParams(newEnemyInfo);
     const newEnemy = new Monster(
-      this.scene, { x: 0, y: 0.5, z: -6 }, 2.5, this.Events, newEnemyInfo, false, this.camera
+      this.scene, { x: 0, y: ney, z: -6 }, nes, this.Events, newEnemyInfo, false, this.camera
     );
     newEnemy.setOpponent(player.monsters[this._activePartyIdx]);
     playerMonster?.setOpponent(newEnemyInfo);
@@ -229,8 +238,9 @@ export default class BattleScene {
     this._gameElement.removeChild(this._loadingElement);
 
     const playerMonster = this.objects.find(m => m._isPlayer);
+    const { scale: vs, y: vy } = this._spriteParams(enemyGroup[0]);
     const newEnemy = new Monster(
-      this.scene, { x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyGroup[0], false, this.camera
+      this.scene, { x: 0, y: vy, z: -6 }, vs, this.Events, enemyGroup[0], false, this.camera
     );
     newEnemy.setOpponent(player.monsters[this._activePartyIdx]);
     playerMonster?.setOpponent(enemyGroup[0]);
@@ -291,8 +301,9 @@ export default class BattleScene {
     this._activePartyIdx = toIdx;
     const newInfo = player.monsters[toIdx];
 
+    const { scale: nps, y: npy } = this._spriteParams(newInfo);
     const newPlayer = new Monster(
-      this.scene, { x: 0, y: 0.5, z: 6 }, 2.5, this.Events, newInfo, true, this.camera
+      this.scene, { x: 0, y: npy, z: 6 }, nps, this.Events, newInfo, true, this.camera
     );
     newPlayer.setOpponent(Enemy.selectedMonster);
     newPlayer._playEnterAnimation();
@@ -401,8 +412,10 @@ export default class BattleScene {
 
     this._bindEnemyHpListener();
 
-    const playerMonster = new Monster(this.scene, { x: 0, y: 0.5, z: 6 }, 2.5, this.Events, playerInfo, true, this.camera);
-    const enemyMonster = new Monster(this.scene, { x: 0, y: 0.5, z: -6 }, 2.5, this.Events, enemyGroup[0], false, this.camera);
+    const { scale: ps, y: py } = this._spriteParams(playerInfo);
+    const { scale: es, y: ey } = this._spriteParams(enemyGroup[0]);
+    const playerMonster = new Monster(this.scene, { x: 0, y: py, z: 6 }, ps, this.Events, playerInfo, true, this.camera);
+    const enemyMonster = new Monster(this.scene, { x: 0, y: ey, z: -6 }, es, this.Events, enemyGroup[0], false, this.camera);
     playerMonster.setOpponent(enemyGroup[0]);
     enemyMonster.setOpponent(playerInfo);
     this.objects.push(playerMonster, enemyMonster);

@@ -29,5 +29,6 @@ export function mapPokemonToMonster(data) {
       artwork: data.sprites.other?.['official-artwork']?.front_default ?? data.sprites.front_default,
     },
     attacks: data.moves.slice(0, 2).map(m => ({ name: m.move.name, type: data.types[0].type.name })),
+    height: data.height,
   };
 }
