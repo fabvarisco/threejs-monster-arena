@@ -279,7 +279,9 @@ export default class Monster {
 
   _damage(value) {
     this._hp = Math.max(0, this._hp - value);
+    this._information.currentHp = this._hp;
     this._updateHtmlContainer();
+    if (this._isPlayer) document.dispatchEvent(new CustomEvent("playerHpChanged"));
   }
 
   _createHtmlContainer() {

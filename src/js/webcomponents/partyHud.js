@@ -39,28 +39,6 @@ class PartyHud extends HTMLElement {
           border: 3px solid white;
           position: relative;
           overflow: hidden;
-          background: linear-gradient(to bottom, #cc0000 50%, #f0f0f0 50%);
-        }
-
-        .ball::before {
-          content: '';
-          position: absolute;
-          top: calc(50% - 2px);
-          left: 0; right: 0;
-          height: 4px;
-          background: #111;
-          z-index: 1;
-        }
-
-        .ball-btn {
-          position: absolute;
-          top: 50%; left: 50%;
-          transform: translate(-50%, -50%);
-          width: 14px; height: 14px;
-          border-radius: 50%;
-          background: white;
-          border: 3px solid #111;
-          z-index: 4;
         }
 
         .sprite {

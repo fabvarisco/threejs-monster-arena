@@ -31,29 +31,49 @@ export default class CharacterSelectionScene {
     this._light();
     this._createObject();
 
-    const results = await Promise.all(POKEMON_ROSTER.map(name => fetchPokemon(name)));
-    const monsters = results.map(mapPokemonToMonster);
+    const stubs = POKEMON_ROSTER.map(name => ({ name, sprites: null, _stub: true }));
 
     this._gameElement.removeChild(this._loadingElement);
 
     const list = document.createElement("monster-list-element");
     this._gameElement.appendChild(list);
-    list.setAttribute("monsters", JSON.stringify(monsters));
+    list.setAttribute("monsters", JSON.stringify(stubs));
 
     this._infoElement = document.createElement("monster-info-element");
     this._gameElement.appendChild(this._infoElement);
-    
-    list.addEventListener("changeMonster", (e) => {
-      this._loadSelectedMonster(e.detail.monster);
-      this._infoElement.setAttribute("monster", JSON.stringify(e.detail.monster));
+
+    list.addEventListener("changeMonster", async (e) => {
+      const mon = e.detail.monster;
+      const full = mon._stub
+        ? mapPokemonToMonster(await fetchPokemon(mon.name))
+        : mon;
+      list.updateMonster(full);
+      this._loadSelectedMonster(full);
+      this._infoElement.setAttribute("monster", JSON.stringify(full));
     });
 
-    if (monsters.length > 0) {
-      this._loadSelectedMonster(monsters[0]);
-      this._infoElement.setAttribute("monster", JSON.stringify(monsters[0]));
-    }
+    const firstFull = mapPokemonToMonster(await fetchPokemon(POKEMON_ROSTER[0]));
+    list.updateMonster(firstFull);
+    this._loadSelectedMonster(firstFull);
+    this._infoElement.setAttribute("monster", JSON.stringify(firstFull));
+
+    this._preloadPokemons(list);
 
     window.addEventListener("resize", this._boundOnWindowResize);
+  }
+
+  async _preloadPokemons(list) {
+    const remaining = POKEMON_ROSTER.slice(1);
+    const BATCH = 10;
+    for (let i = 0; i < remaining.length; i += BATCH) {
+      if (!this.renderer) return; // scene destroyed mid-load
+      const batch = remaining.slice(i, i + BATCH);
+      const results = await Promise.allSettled(
+        batch.map(name => fetchPokemon(name).then(mapPokemonToMonster))
+      );
+      const fulfilled = results.filter(r => r.status === "fulfilled").map(r => r.value);
+      if (fulfilled.length > 0) list.updateMonsters(fulfilled);
+    }
   }
 
   _addWebComponents() {
