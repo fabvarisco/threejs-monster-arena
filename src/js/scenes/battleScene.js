@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { EventDispatcher } from "three";
 
 import { loaderOBJ } from "../../utils/loader";
-import { POKEMON_ROSTER, Enemy, player } from "../../utils/monsters";
+import { POKEMON_ROSTER, Enemy, player, SPRITE_Y_OFFSETS } from "../../utils/monsters";
 import { EnemyTurn, PlayerTurn } from "../../utils/utils";
 import Monster from "../monster";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
@@ -76,8 +76,9 @@ export default class BattleScene {
     const scale = info?.height
       ? Math.min(4.0, Math.max(1.5, 2.5 * Math.pow(info.height / 10, 0.4)))
       : 2.5;
-    const GROUND_Y = -0.75; // derived from original y:0.5 scale:2.5 → bottom at 0.5-1.25
-    return { scale, y: GROUND_Y + scale / 2 };
+    const GROUND_Y = -0.75;
+    const yOffset = SPRITE_Y_OFFSETS[info?.name] ?? 0;
+    return { scale, y: GROUND_Y + scale / 2 + yOffset };
   }
 
   _maskEnemyParty(monsters) {

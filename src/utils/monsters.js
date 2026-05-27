@@ -1,3 +1,10 @@
+export const SPRITE_Y_OFFSETS = {
+  charmander:  0.3,
+  charmeleon:  0.25,
+  charizard:   0.2,
+  snorlax:     0.4,
+};
+
 export const POKEMON_ROSTER = [
   'bulbasaur', 'ivysaur', 'venusaur',
   'charmander', 'charmeleon', 'charizard',
