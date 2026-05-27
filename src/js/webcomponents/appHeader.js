@@ -59,7 +59,7 @@ class AppHeader extends HTMLElement {
       <header>
         <nav>
         <a href="/" class="a-active">
-          <img src="./assets/threejs_logo.png" width="24">Pokebattle
+          <img src="./assets/threejs_logo.png" width="24">Pokébattle
         </a>
           <a href="https://jquery-pokememory.vercel.app/"  target="_blank" rel="noopener">
             <img src="https://jquery-pokememory.vercel.app/jquery.svg" width="24">Pokémemory

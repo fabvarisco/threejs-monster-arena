@@ -1,6 +1,6 @@
-import CharacterSelectionScene from "./Scenes/characterSelectionScene";
-import TitleScene from "./Scenes/titleScene";
-import BattleScene from "./Scenes/battleScene";
+import CharacterSelectionScene from "./scenes/characterSelectionScene";
+import TitleScene from "./scenes/titleScene";
+import BattleScene from "./scenes/battleScene";
 
 export default class GameManager {
   constructor() {

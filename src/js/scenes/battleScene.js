@@ -7,6 +7,7 @@ import { EnemyTurn, PlayerTurn } from "../../utils/utils";
 import Monster from "../monster";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
 import { vpWidth, vpHeight, vpAspect } from "../../utils/viewport";
+import itemsList from "../../utils/items";
 
 export default class BattleScene {
   constructor(_selectedMonsterName) {
@@ -116,6 +117,18 @@ export default class BattleScene {
       if (partyHud) partyHud.setAttribute("party", JSON.stringify(player.monsters));
       const rosterPanel = this._gameElement?.querySelector("monster-roster-panel");
       if (rosterPanel) rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
+    } else if (rewardEvent.detail?.type === "item") {
+      const item = itemsList[rewardEvent.detail.itemId];
+      if (item?.category === "stat_boost") {
+        const activeMonster = this.objects.find(m => m._isPlayer);
+        if (activeMonster) {
+          item.func(activeMonster);
+          if ((player.inventory[rewardEvent.detail.itemId] ?? 0) > 0)
+            player.inventory[rewardEvent.detail.itemId]--;
+        }
+        const rosterPanel = this._gameElement?.querySelector("monster-roster-panel:not([side])");
+        if (rosterPanel) rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
+      }
     }
 
     this._gameElement.appendChild(this._loadingElement);

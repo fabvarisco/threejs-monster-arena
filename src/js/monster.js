@@ -23,12 +23,15 @@ const vertexShader = `
 const fragmentShader = `
   uniform sampler2D uTexture;
   uniform float uFlash;
+  uniform float uHeal;
   uniform float uOpacity;
   varying vec2 vUv;
   void main() {
     vec4 texColor = texture2D(uTexture, vUv);
     if (texColor.a < 0.1) discard;
-    gl_FragColor = vec4(mix(texColor.rgb, vec3(1.0, 0.2, 0.2), uFlash), texColor.a * uOpacity);
+    vec3 col = mix(texColor.rgb, vec3(1.0, 0.2, 0.2), uFlash);
+    col = mix(col, vec3(0.2, 1.0, 0.2), uHeal);
+    gl_FragColor = vec4(col, texColor.a * uOpacity);
   }
 `;
 
@@ -49,6 +52,8 @@ export default class Monster {
     this._htmlContainer = null;
     this._flashStartTime = null;
     this._flashDuration = 500;
+    this._healFlashStartTime = null;
+    this._healFlashDuration = 500;
     this._pulseStartTime = null;
     this._pulseDuration = 400;
     this._exitAnimStartTime = null;
@@ -78,6 +83,7 @@ export default class Monster {
       uniforms: {
         uTexture: { value: texture },
         uFlash: { value: 0.0 },
+        uHeal: { value: 0.0 },
         uShake: { value: 0.0 },
         uTime: { value: 0.0 },
         uPulse: { value: 0.0 },
@@ -123,6 +129,12 @@ export default class Monster {
     this._flashStartTime = performance.now();
   }
 
+  _playHealAnimation() {
+    if (!this._material) return;
+    this._material.uniforms.uHeal.value = 1.0;
+    this._healFlashStartTime = performance.now();
+  }
+
   _playDeathAnimation() {}
 
   _playExitAnimation() {
@@ -152,6 +164,10 @@ export default class Monster {
     if (this._onUseItem) {
       document.removeEventListener("useItem", this._onUseItem);
       this._onUseItem = null;
+    }
+    if (this._onPlayerUsedItem) {
+      document.removeEventListener("playerUsedItem", this._onPlayerUsedItem);
+      this._onPlayerUsedItem = null;
     }
     if (this._mesh) {
       this._scene.remove(this._mesh);
@@ -205,8 +221,10 @@ export default class Monster {
         if (!item || (player.inventory[itemId] ?? 0) <= 0) return;
         player.inventory[itemId]--;
         item.func(this);
+        this._playHealAnimation();
         document.dispatchEvent(new CustomEvent("inventoryChanged"));
         EnemyTurn();
+        document.dispatchEvent(new CustomEvent("playerUsedItem"));
       };
       document.addEventListener("useItem", this._onUseItem);
 
@@ -219,6 +237,22 @@ export default class Monster {
         }
       });
     } else {
+      this._onPlayerUsedItem = () => {
+        setTimeout(() => {
+          this._playAttackAnimation(0);
+          const damage = this._calculateDamage(
+            this._information,
+            this._opponentInfo ?? { defense: 1, type: "normal", types: ["normal"] }
+          );
+          this._events["monsterPlayerHpChanged"].dispatchEvent({
+            type: "monsterPlayerHpChanged",
+            damage,
+          });
+          PlayerTurn();
+        }, 1200);
+      };
+      document.addEventListener("playerUsedItem", this._onPlayerUsedItem);
+
       this._events["monsterEnemyHpChanged"].addEventListener("monsterEnemyHpChanged", (e) => {
         this._playDamageAnimation();
         this._damage(e.damage);
@@ -273,6 +307,11 @@ export default class Monster {
       this._material.uniforms.uShake.value = t;
       this._material.uniforms.uTime.value = performance.now() / 1000;
       if (t === 0) this._flashStartTime = null;
+    }
+    if (this._healFlashStartTime !== null && this._material) {
+      const t = Math.max(0, 1 - (performance.now() - this._healFlashStartTime) / this._healFlashDuration);
+      this._material.uniforms.uHeal.value = t;
+      if (t === 0) this._healFlashStartTime = null;
     }
     if (this._pulseStartTime !== null && this._material) {
       const elapsed = performance.now() - this._pulseStartTime;

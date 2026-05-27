@@ -67,7 +67,7 @@ class BattleMenu extends HTMLElement {
       })
       .join("");
 
-    container.querySelectorAll(".btn-item").forEach((btn) => {
+    container.querySelectorAll(".btn-item-card").forEach((btn) => {
       btn.addEventListener("click", () => {
         document.dispatchEvent(new CustomEvent("useItem", { detail: { itemId: btn.dataset.itemId } }));
         this.back("items");

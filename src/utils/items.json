@@ -53,7 +53,7 @@
       },
       "price": 500,
       "sellPrice": 250,
-      "usableInBattle": false
+      "usableInBattle": true
     },
     {
       "id": "defense_boost",
@@ -67,7 +67,7 @@
       },
       "price": 500,
       "sellPrice": 250,
-      "usableInBattle": false
+      "usableInBattle": true
     },
     {
       "id": "hp_boost",
@@ -81,7 +81,7 @@
       },
       "price": 600,
       "sellPrice": 300,
-      "usableInBattle": false
+      "usableInBattle": true
     }
   ]
 }
