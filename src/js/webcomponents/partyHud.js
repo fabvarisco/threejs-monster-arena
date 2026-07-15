@@ -113,6 +113,27 @@ class PartyHud extends HTMLElement {
         .name.empty-name {
           opacity: 0.25;
         }
+
+        @media (max-width: 1024px) {
+          :host {
+            gap: 10px;
+            bottom: 12px;
+          }
+          .ball.active {
+            width: 56px;
+            height: 56px;
+          }
+          .ball.bench,
+          .ball.fainted,
+          .ball.empty {
+            width: 48px;
+            height: 48px;
+          }
+          .name {
+            font-size: 10px;
+            max-width: 56px;
+          }
+        }
       </style>
 
       ${[0, 1, 2].map(i => this._slot(party[i] ?? null, i === activeIdx, i)).join("")}

@@ -115,6 +115,28 @@ class MonsterList extends HTMLElement {
           background: rgba(255,255,255,0.88);
           transform: scale(1.02);
         }
+
+        @media (max-width: 1024px) {
+          .wrapper {
+            width: 360px;
+            padding: 12px;
+          }
+          .btn {
+            min-height: 56px;
+            font-size: 14px;
+            gap: 8px;
+            padding: 6px 10px;
+          }
+          .monster-thumb,
+          .thumb-placeholder {
+            width: 40px;
+            height: 40px;
+          }
+          .btn.select-monster {
+            min-height: 48px;
+            font-size: 15px;
+          }
+        }
       </style>
 
       <div class="wrapper">

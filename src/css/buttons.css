@@ -106,6 +106,25 @@
 }
 
 
+@media (max-width: 1024px) {
+    .btn {
+        width: 200px;
+        height: 60px;
+        font-size: 18px;
+        padding-left: 16px;
+        border-radius: 20px;
+        border-width: 4px;
+    }
+
+    .btn-wrapper {
+        margin: 12px;
+    }
+
+    .items-panel {
+        width: 200px;
+    }
+}
+
 @keyframes pulse {
     0% {
       transform: scale(0.95);

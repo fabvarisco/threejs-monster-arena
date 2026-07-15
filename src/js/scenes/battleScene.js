@@ -6,7 +6,7 @@ import { POKEMON_ROSTER, Enemy, player, SPRITE_Y_OFFSETS } from "../../utils/mon
 import { EnemyTurn, PlayerTurn } from "../../utils/utils";
 import Monster from "../monster";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
-import { vpWidth, vpHeight, vpAspect } from "../../utils/viewport";
+import { vpWidth, vpHeight, vpAspect, vpFov } from "../../utils/viewport";
 import itemsList from "../../utils/items";
 
 export default class BattleScene {
@@ -30,6 +30,7 @@ export default class BattleScene {
     this._activePartyIdx = 0;
     this._activeEnemyIdx = 0;
     this._onEnemyHpChanged = this._handleEnemyHpChanged.bind(this);
+    this._boundOnWindowResize = this._onWindowResize.bind(this);
 
     this._selectedMonsterName = _selectedMonsterName;
 
@@ -45,7 +46,7 @@ export default class BattleScene {
     this._camera();
     this._light();
     this._createObject();
-    window.addEventListener("resize", this._onWindowResize.bind(this));
+    window.addEventListener("resize", this._boundOnWindowResize);
   }
 
   _document() {
@@ -352,7 +353,7 @@ export default class BattleScene {
   }
 
   _camera() {
-    this.camera = new THREE.PerspectiveCamera(60, vpAspect(), 1, 1000);
+    this.camera = new THREE.PerspectiveCamera(vpFov(60), vpAspect(), 1, 1000);
     this.camera.position.set(2, 2, 12);
   }
 
@@ -424,6 +425,7 @@ export default class BattleScene {
 
   _onWindowResize() {
     this.camera.aspect = vpAspect();
+    this.camera.fov = vpFov(60);
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(vpWidth(), vpHeight());
   }
@@ -452,7 +454,7 @@ export default class BattleScene {
     document.removeEventListener("switchMonster", this._onSwitchMonster);
     document.removeEventListener("inventoryChanged", this._onInventoryChanged);
     document.removeEventListener("playerHpChanged", this._onPlayerHpChanged);
-    window.removeEventListener("resize", this._onWindowResize.bind(this));
+    window.removeEventListener("resize", this._boundOnWindowResize);
     const battleMenu = this._gameElement?.querySelector("battle-menu");
     if (battleMenu) battleMenu.remove();
     const gameOver = this._gameElement?.querySelector("game-over");

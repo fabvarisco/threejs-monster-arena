@@ -35,6 +35,14 @@ body {
   left: 75%;
 }
 
+@media (max-width: 1024px) {
+  .container {
+    top: 65%;
+    left: auto;
+    right: 16px;
+  }
+}
+
 ::backdrop {
   background-image: linear-gradient(
     45deg,

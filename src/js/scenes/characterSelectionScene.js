@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 import { POKEMON_ROSTER } from "../../utils/monsters";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
-import { vpWidth, vpHeight, vpAspect } from "../../utils/viewport";
+import { vpWidth, vpHeight, vpAspect, vpFov } from "../../utils/viewport";
 
 export default class CharacterSelectionScene {
   constructor() {
@@ -103,7 +103,7 @@ export default class CharacterSelectionScene {
 
   _camera() {
     this.camera = new THREE.PerspectiveCamera(
-      60,
+      vpFov(60),
       vpAspect(),
       1,
       1000
@@ -165,6 +165,7 @@ export default class CharacterSelectionScene {
 
   _onWindowResize() {
     this.camera.aspect = vpAspect();
+    this.camera.fov = vpFov(60);
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(vpWidth(), vpHeight());
   }

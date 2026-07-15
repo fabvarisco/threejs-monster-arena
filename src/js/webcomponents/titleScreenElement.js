@@ -42,6 +42,12 @@ class TitleScreenElement extends HTMLElement {
         }
         .icon { display: flex; align-items: center; }
         .img-size { width: 34px; height: 34px; margin-right: 22px; }
+
+        @media (max-width: 1024px) {
+          h1 {
+            font-size: 2.5rem;
+          }
+        }
       </style>
       <h1>Pokébattle</h1>
       <button id="start-game" class="btn btn-wrapper">Start Game<span class="icon"><img class="img-size" src="/battle_icon.png"></span></button>

@@ -138,6 +138,19 @@ class PokemonInfo extends HTMLElement {
           border-bottom: 1px solid #333;
         }
         .attack-item:last-child { border-bottom: none; }
+
+        @media (max-width: 1024px) {
+          :host {
+            right: 12px;
+          }
+          .card {
+            width: 200px;
+            padding: 16px 18px;
+          }
+          .name {
+            font-size: 19px;
+          }
+        }
       </style>
       <div class="card">
         ${m ? `

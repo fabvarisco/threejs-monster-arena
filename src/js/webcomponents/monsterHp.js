@@ -54,6 +54,19 @@ class MonsterHp extends HTMLElement {
           color: #555;
           text-align: right;
         }
+
+        @media (max-width: 1024px) {
+          :host {
+            width: 180px;
+            padding: 6px 10px;
+          }
+          :host([player]) {
+            left: 12px;
+          }
+          :host(:not([player])) {
+            right: 12px;
+          }
+        }
       </style>
       <span class="name"></span>
       <div class="hp-bar-bg"><div class="hp-bar-fill"></div></div>

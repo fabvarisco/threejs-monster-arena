@@ -196,6 +196,27 @@ class MonsterRosterPanel extends HTMLElement {
           font-size: 10px;
           margin-right: 2px;
         }
+
+        @media (max-width: 1024px) {
+          .card {
+            width: 230px;
+            padding: 6px 10px 6px 6px;
+          }
+          .sprite {
+            width: 44px;
+            height: 44px;
+          }
+          .name {
+            font-size: 13px;
+          }
+          .hp-text {
+            width: 46px;
+            font-size: 11px;
+          }
+          .stat {
+            font-size: 12px;
+          }
+        }
       </style>
       ${this._party.map((m, i) => this._monsterCard(m, i)).join("")}
     `;

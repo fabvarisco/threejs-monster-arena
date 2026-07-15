@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { loaderGLTF } from "../../utils/loader";
-import { vpWidth, vpHeight, vpAspect } from "../../utils/viewport";
+import { vpWidth, vpHeight, vpAspect, vpFov } from "../../utils/viewport";
 
 export default class TitleScene {
   constructor() {
@@ -52,7 +52,7 @@ export default class TitleScene {
   }
 
   _camera() {
-    this.camera = new THREE.PerspectiveCamera(60, vpAspect(), 1, 1000);
+    this.camera = new THREE.PerspectiveCamera(vpFov(60), vpAspect(), 1, 1000);
     this.camera.position.set(0, 1, 5);
   }
 
@@ -81,6 +81,7 @@ export default class TitleScene {
 
   _onWindowResize() {
     this.camera.aspect = vpAspect();
+    this.camera.fov = vpFov(60);
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(vpWidth(), vpHeight());
   }
