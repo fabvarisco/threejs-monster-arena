@@ -13,8 +13,8 @@ class BattleMenu extends HTMLElement {
     this.innerHTML = `
       <div id="container" class="container block">
         <div id="options" class="block">
-          <button id="btnAttack" class="btn btn-wrapper">Attacks <span class="icon"><img class="img-size" src="/public/battle_icon.png"></span></button>
-          <button id="btnItems" class="btn btn-wrapper">Items<span class="icon"><img class="img-size" src="/public/items_icon.png"></span></button>
+          <button id="btnAttack" class="btn btn-wrapper">Attacks <span class="icon"><img class="img-size" src="/battle_icon.png"></span></button>
+          <button id="btnItems" class="btn btn-wrapper">Items<span class="icon"><img class="img-size" src="/items_icon.png"></span></button>
         </div>
 
         <div id="attacks" class="none">

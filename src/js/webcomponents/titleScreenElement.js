@@ -1,3 +1,5 @@
+import buttonsCss from "../../css/buttons.css?inline";
+
 class TitleScreenElement extends HTMLElement {
   constructor() {
     super();
@@ -6,7 +8,7 @@ class TitleScreenElement extends HTMLElement {
 
   connectedCallback() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="/src/css/buttons.css">
+      <style>${buttonsCss}</style>
       <style>
         :host {
           position: fixed;
@@ -42,7 +44,7 @@ class TitleScreenElement extends HTMLElement {
         .img-size { width: 34px; height: 34px; margin-right: 22px; }
       </style>
       <h1>Pokébattle</h1>
-      <button id="start-game" class="btn btn-wrapper">Start Game<span class="icon"><img class="img-size" src="/public/battle_icon.png"></span></button>
+      <button id="start-game" class="btn btn-wrapper">Start Game<span class="icon"><img class="img-size" src="/battle_icon.png"></span></button>
     `;
 
     this.shadowRoot.getElementById("start-game").addEventListener("click", () => {
