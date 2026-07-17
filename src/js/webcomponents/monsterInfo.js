@@ -1,13 +1,29 @@
 const TYPE_COLORS = {
-  fire: "#F08030", water: "#6890F0", grass: "#78C850", electric: "#F8D030",
-  psychic: "#F85888", ice: "#98D8D8", dragon: "#7038F8", dark: "#705848",
-  fairy: "#EE99AC", normal: "#A8A878", fighting: "#C03028", flying: "#A890F0",
-  poison: "#A040A0", ground: "#E0C068", rock: "#B8A038", bug: "#A8B820",
-  ghost: "#705898", steel: "#B8B8D0",
+  fire: "#F08030",
+  water: "#6890F0",
+  grass: "#78C850",
+  electric: "#F8D030",
+  psychic: "#F85888",
+  ice: "#98D8D8",
+  dragon: "#7038F8",
+  dark: "#705848",
+  fairy: "#EE99AC",
+  normal: "#A8A878",
+  fighting: "#C03028",
+  flying: "#A890F0",
+  poison: "#A040A0",
+  ground: "#E0C068",
+  rock: "#B8A038",
+  bug: "#A8B820",
+  ghost: "#705898",
+  steel: "#B8B8D0",
 };
 
 const STAT_COLORS = {
-  hp: "#FF5959", attack: "#F5AC78", defense: "#FAE078", speed: "#FA92B2",
+  hp: "#FF5959",
+  attack: "#F5AC78",
+  defense: "#FAE078",
+  speed: "#FA92B2",
 };
 
 class PokemonInfo extends HTMLElement {
@@ -48,10 +64,16 @@ class PokemonInfo extends HTMLElement {
   _render() {
     const m = this._monster;
     const typeBadges = (m?.types ?? [])
-      .map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t] ?? "#777"}">${t}</span>`)
+      .map(
+        (t) =>
+          `<span class="type-badge" style="background:${TYPE_COLORS[t] ?? "#777"}">${t}</span>`
+      )
       .join("");
     const attacks = (m?.attacks ?? [])
-      .map(a => `<div class="attack-item">${a.name.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</div>`)
+      .map(
+        (a) =>
+          `<div class="attack-item">${a.name.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</div>`
+      )
       .join("");
 
     this.shadowRoot.innerHTML = `
@@ -66,16 +88,16 @@ class PokemonInfo extends HTMLElement {
         .card {
           background: black;
           color: white;
-          border-radius: 16px;
-          padding: 20px 24px;
-          width: 220px;
+          border-radius: 1rem;
+          padding: 1.25rem 1.5rem;
+          width: 13.75rem;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 0.75rem;
           border: 3px solid white;
         }
         .name {
-          font-size: 22px;
+          font-size: 1.375rem;
           font-weight: 700;
           text-transform: capitalize;
           text-align: center;
@@ -86,15 +108,15 @@ class PokemonInfo extends HTMLElement {
           justify-content: center;
         }
         .type-badge {
-          padding: 2px 10px;
-          border-radius: 12px;
-          font-size: 12px;
+          padding: 2px 0.625rem;
+          border-radius: 0.75rem;
+          font-size: 0.75rem;
           font-weight: 600;
           text-transform: capitalize;
           color: white;
         }
         .section-title {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 1px;
@@ -104,17 +126,17 @@ class PokemonInfo extends HTMLElement {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 13px;
+          font-size: 0.8125rem;
         }
         .stat-label {
-          width: 36px;
+          width: 2.25rem;
           color: #aaa;
-          font-size: 11px;
+          font-size: 0.6875rem;
           text-transform: uppercase;
           flex-shrink: 0;
         }
         .stat-value {
-          width: 28px;
+          width: 1.75rem;
           text-align: right;
           font-weight: 700;
           flex-shrink: 0;
@@ -132,7 +154,7 @@ class PokemonInfo extends HTMLElement {
           transition: width 0.4s ease;
         }
         .attack-item {
-          font-size: 13px;
+          font-size: 0.8125rem;
           text-transform: capitalize;
           padding: 4px 0;
           border-bottom: 1px solid #333;
@@ -141,19 +163,50 @@ class PokemonInfo extends HTMLElement {
 
         @media (max-width: 1024px) {
           :host {
-            right: 12px;
+            right: 0.75rem;
           }
           .card {
-            width: 200px;
-            padding: 16px 18px;
+            width: 12.5rem;
+            padding: 1rem 1.125rem;
           }
           .name {
-            font-size: 19px;
+            font-size: 1.1875rem;
+          }
+        }
+
+        @media (max-width: 600px) {
+          :host {
+            top: auto;
+            right: 0.5rem;
+            left: 0.5rem;
+            bottom: 0.5rem;
+            transform: none;
+          }
+          .card {
+            width: auto;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.375rem 1rem;
+            padding: 0.75rem 1rem;
+          }
+          .name {
+            font-size: 1rem;
+            text-align: left;
+          }
+          .stat-row {
+            width: calc(50% - 0.5rem);
+          }
+          .section-title,
+          .attacks {
+            display: none;
           }
         }
       </style>
       <div class="card">
-        ${m ? `
+        ${
+          m
+            ? `
           <div class="name">${m.name}</div>
           <div class="types">${typeBadges}</div>
           <div class="section-title">Stats</div>
@@ -162,8 +215,10 @@ class PokemonInfo extends HTMLElement {
           ${this._statBar("DEF", m.defense, "defense")}
           ${this._statBar("SPD", m.speed, "speed")}
           <div class="section-title">Attacks</div>
-          ${attacks}
-        ` : ""}
+          <div class="attacks">${attacks}</div>
+        `
+            : ""
+        }
       </div>
     `;
   }

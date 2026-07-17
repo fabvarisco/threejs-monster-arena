@@ -7,17 +7,17 @@ class MonsterList extends HTMLElement {
       <style>
         .wrapper {
           position: fixed;
-          top: calc(64px + 16px);
-          left: 16px;
-          width: 460px;
+          top: calc(var(--header-h, 4rem) + 1rem);
+          left: 1rem;
+          width: 28.75rem;
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 0.625rem;
           box-sizing: border-box;
           background: rgba(0, 0, 0, 0.72);
           border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 20px;
-          padding: 16px;
+          border-radius: 1.25rem;
+          padding: 1rem;
           box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.04);
           backdrop-filter: blur(10px);
         }
@@ -25,7 +25,7 @@ class MonsterList extends HTMLElement {
         .panel-title {
           color: rgba(255,255,255,0.5);
           font-family: Nunito;
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 700;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -34,13 +34,13 @@ class MonsterList extends HTMLElement {
 
         .search-input {
           width: 100%;
-          padding: 10px 16px;
-          border-radius: 12px;
+          padding: 0.625rem 1rem;
+          border-radius: 0.75rem;
           border: 1px solid rgba(255,255,255,0.2);
           background: rgba(255,255,255,0.06);
           color: white;
           font-family: Nunito;
-          font-size: 15px;
+          font-size: 0.9375rem;
           outline: none;
           box-sizing: border-box;
           transition: border-color 0.15s;
@@ -51,9 +51,10 @@ class MonsterList extends HTMLElement {
         .select-monster-card-container {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 8px;
+          gap: 0.5rem;
           overflow-y: auto;
           max-height: calc(100vh - 260px);
+          max-height: calc(100dvh - var(--header-h, 4rem) - 12.25rem);
           scrollbar-width: thin;
           scrollbar-color: rgba(255,255,255,0.2) transparent;
           padding-right: 2px;
@@ -61,16 +62,16 @@ class MonsterList extends HTMLElement {
 
         .btn {
           width: 100%;
-          min-height: 64px;
-          border-radius: 14px;
+          min-height: 4rem;
+          border-radius: 0.875rem;
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 8px 14px;
+          gap: 0.625rem;
+          padding: 0.5rem 0.875rem;
           font-weight: 600;
           background: rgba(255,255,255,0.05);
           color: white;
-          font-size: 15px;
+          font-size: 0.9375rem;
           font-family: Nunito;
           border: 1px solid rgba(255,255,255,0.15);
           cursor: pointer;
@@ -85,15 +86,15 @@ class MonsterList extends HTMLElement {
         }
 
         .monster-thumb {
-          width: 48px;
-          height: 48px;
+          width: 3rem;
+          height: 3rem;
           image-rendering: pixelated;
           object-fit: contain;
           flex-shrink: 0;
         }
         .thumb-placeholder {
-          width: 48px;
-          height: 48px;
+          width: 3rem;
+          height: 3rem;
           flex-shrink: 0;
           border-radius: 50%;
           background: rgba(255,255,255,0.08);
@@ -106,10 +107,10 @@ class MonsterList extends HTMLElement {
           color: black;
           border-color: white;
           font-weight: 800;
-          font-size: 16px;
+          font-size: 1rem;
           letter-spacing: 0.05em;
-          min-height: 52px;
-          border-radius: 12px;
+          min-height: 3.25rem;
+          border-radius: 0.75rem;
         }
         .btn.select-monster:hover {
           background: rgba(255,255,255,0.88);
@@ -118,23 +119,35 @@ class MonsterList extends HTMLElement {
 
         @media (max-width: 1024px) {
           .wrapper {
-            width: 360px;
-            padding: 12px;
+            width: 22.5rem;
+            padding: 0.75rem;
           }
           .btn {
-            min-height: 56px;
-            font-size: 14px;
-            gap: 8px;
-            padding: 6px 10px;
+            min-height: 3.5rem;
+            font-size: 0.875rem;
+            gap: 0.5rem;
+            padding: 0.375rem 0.625rem;
           }
           .monster-thumb,
           .thumb-placeholder {
-            width: 40px;
-            height: 40px;
+            width: 2.5rem;
+            height: 2.5rem;
           }
           .btn.select-monster {
-            min-height: 48px;
-            font-size: 15px;
+            min-height: 3rem;
+            font-size: 0.9375rem;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .wrapper {
+            top: calc(var(--header-h, 4rem) + 0.5rem);
+            left: 0.5rem;
+            right: 0.5rem;
+            width: auto;
+          }
+          .select-monster-card-container {
+            max-height: 24dvh;
           }
         }
       </style>
@@ -151,19 +164,30 @@ class MonsterList extends HTMLElement {
     this.selectedMonster = {};
     this._filter = "";
 
-    this.selectMonsterContainerCard = this.shadowRoot.querySelector(".select-monster-card-container");
+    this.selectMonsterContainerCard = this.shadowRoot.querySelector(
+      ".select-monster-card-container"
+    );
 
     this.shadowRoot.getElementById("search").addEventListener("input", (e) => {
       this._filter = e.target.value.toLowerCase();
       this._renderMonsters();
     });
 
-    this.shadowRoot.getElementById("start-battle").addEventListener("click", () => {
-      this.dispatchEvent(new CustomEvent("startBattle", { bubbles: true, detail: { selectedMonster: this.selectedMonster } }));
-    });
+    this.shadowRoot
+      .getElementById("start-battle")
+      .addEventListener("click", () => {
+        this.dispatchEvent(
+          new CustomEvent("startBattle", {
+            bubbles: true,
+            detail: { selectedMonster: this.selectedMonster },
+          })
+        );
+      });
   }
 
-  static get observedAttributes() { return ["monsters"]; }
+  static get observedAttributes() {
+    return ["monsters"];
+  }
 
   attributeChangedCallback(name, _old, newValue) {
     if (name === "monsters") {
@@ -172,17 +196,19 @@ class MonsterList extends HTMLElement {
     }
   }
 
-  connectedCallback() { this._renderMonsters(); }
+  connectedCallback() {
+    this._renderMonsters();
+  }
 
   updateMonster(full) {
-    const idx = this.monsters.findIndex(m => m.name === full.name);
+    const idx = this.monsters.findIndex((m) => m.name === full.name);
     if (idx !== -1) this.monsters[idx] = full;
     this._renderMonsters();
   }
 
   updateMonsters(arr) {
-    arr.forEach(full => {
-      const idx = this.monsters.findIndex(m => m.name === full.name);
+    arr.forEach((full) => {
+      const idx = this.monsters.findIndex((m) => m.name === full.name);
       if (idx !== -1) this.monsters[idx] = full;
     });
     this._renderMonsters();
@@ -190,7 +216,7 @@ class MonsterList extends HTMLElement {
 
   _renderMonsters() {
     const visible = this._filter
-      ? this.monsters.filter(m => m.name.toLowerCase().includes(this._filter))
+      ? this.monsters.filter((m) => m.name.toLowerCase().includes(this._filter))
       : this.monsters;
 
     this.selectMonsterContainerCard.innerHTML = "";
@@ -203,10 +229,12 @@ class MonsterList extends HTMLElement {
       listItem.innerHTML = `${thumb}<span>${monster.name}</span>`;
       listItem.addEventListener("click", () => {
         this.selectedMonster = monster;
-        this.dispatchEvent(new CustomEvent("changeMonster", {
-          bubbles: true,
-          detail: { monster },
-        }));
+        this.dispatchEvent(
+          new CustomEvent("changeMonster", {
+            bubbles: true,
+            detail: { monster },
+          })
+        );
       });
       this.selectMonsterContainerCard.appendChild(listItem);
     });

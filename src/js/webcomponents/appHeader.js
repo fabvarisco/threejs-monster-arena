@@ -32,7 +32,7 @@ class AppHeader extends HTMLElement {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          margin-right: 8px;
+          margin-right: 0.5rem;
         }
         a {
           color: var(--a-active-color);
@@ -40,9 +40,9 @@ class AppHeader extends HTMLElement {
           display: flex;
           align-items: center;
           gap: 6px;
-          height: 64px;
-          padding-left: 24px;
-          padding-right: 24px;
+          height: var(--header-h, 4rem);
+          padding-left: 1.5rem;
+          padding-right: 1.5rem;
         }
         a:hover {
           background-color: var(--btn-hover-color);
@@ -52,20 +52,31 @@ class AppHeader extends HTMLElement {
           color: white;
         }
         img {
+          width: 1.5rem;
           border-radius: 4px;
           flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+          a {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+          }
+          a[target="_blank"] .label {
+            display: none;
+          }
         }
       </style>
       <header>
         <nav>
         <a href="/" class="a-active">
-          <img src="./assets/threejs_logo.png" width="24">Pokébattle
+          <img src="./assets/threejs_logo.png" width="24"><span class="label">Pokébattle</span>
         </a>
           <a href="https://jquery-pokememory.vercel.app/"  target="_blank" rel="noopener">
-            <img src="https://jquery-pokememory.vercel.app/jquery.svg" width="24">Pokémemory
+            <img src="https://jquery-pokememory.vercel.app/jquery.svg" width="24"><span class="label">Pokémemory</span>
           </a>
           <a href="https://react-pokedex-rho.vercel.app/" target="_blank" rel="noopener">
-            <img src="https://react-pokedex-rho.vercel.app/favicon.ico" width="24">Pokédex
+            <img src="https://react-pokedex-rho.vercel.app/favicon.ico" width="24"><span class="label">Pokédex</span>
           </a>
         </nav>
       </header>

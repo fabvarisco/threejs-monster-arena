@@ -13,12 +13,12 @@ export default class GameManager {
 
   _documentEvents() {
     document.addEventListener("startgame", () => {
-      this._changeScene('CharacterSelectionScene');
+      this._changeScene("CharacterSelectionScene");
     });
     document.addEventListener("startBattle", (event) => {
-      console.log(event.detail)
+      console.log(event.detail);
       this.selectedMonsterName = event.detail.selectedMonster;
-      this._changeScene('BattleScene');
+      this._changeScene("BattleScene");
     });
   }
 
@@ -34,20 +34,20 @@ export default class GameManager {
     this.currentScene.DestroyScene();
     this.currentScene = null;
 
-    switch(sceneName){
-      case 'TitleScene':
+    switch (sceneName) {
+      case "TitleScene":
         this.currentScene = new TitleScene();
         this.currentScene.InitScene();
 
-      break;
-      case 'BattleScene':
+        break;
+      case "BattleScene":
         this.currentScene = new BattleScene(this.selectedMonsterName);
-        this.currentScene.InitScene()
-      break;
-      case 'CharacterSelectionScene':
+        this.currentScene.InitScene();
+        break;
+      case "CharacterSelectionScene":
         this.currentScene = new CharacterSelectionScene();
         this.currentScene.InitScene();
-      break;
+        break;
     }
   }
 }

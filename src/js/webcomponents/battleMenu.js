@@ -1,12 +1,15 @@
 import { player } from "../../utils/monsters.js";
 import itemsList from "../../utils/items.js";
 
-const battleItems = Object.values(itemsList).filter((item) => item.usableInBattle);
+const battleItems = Object.values(itemsList).filter(
+  (item) => item.usableInBattle
+);
 
 class BattleMenu extends HTMLElement {
   connectedCallback() {
     const attacks = player.selectedMonster?.attacks ?? [];
-    const formatName = (name) => name.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const formatName = (name) =>
+      name.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     const attack1Name = formatName(attacks[0]?.name ?? "Attack 1");
     const attack2Name = formatName(attacks[1]?.name ?? "Attack 2");
 
@@ -30,10 +33,18 @@ class BattleMenu extends HTMLElement {
       </div>
     `;
 
-    this.querySelector("#btnAttack").addEventListener("click", () => this.showContainer("attacks"));
-    this.querySelector("#btnItems").addEventListener("click", () => this.showContainer("items"));
-    this.querySelector("#attacks .btn-back").addEventListener("click", () => this.back("attacks"));
-    this.querySelector("#items .btn-back").addEventListener("click", () => this.back("items"));
+    this.querySelector("#btnAttack").addEventListener("click", () =>
+      this.showContainer("attacks")
+    );
+    this.querySelector("#btnItems").addEventListener("click", () =>
+      this.showContainer("items")
+    );
+    this.querySelector("#attacks .btn-back").addEventListener("click", () =>
+      this.back("attacks")
+    );
+    this.querySelector("#items .btn-back").addEventListener("click", () =>
+      this.back("items")
+    );
 
     this._renderItems();
 
@@ -49,7 +60,9 @@ class BattleMenu extends HTMLElement {
     const container = this.querySelector("#item-list");
     if (!container) return;
 
-    const availableItems = battleItems.filter((item) => (player.inventory[item.id] ?? 0) > 0);
+    const availableItems = battleItems.filter(
+      (item) => (player.inventory[item.id] ?? 0) > 0
+    );
 
     if (availableItems.length === 0) {
       container.innerHTML = `<p class="items-empty">No items available.</p>`;
@@ -69,7 +82,9 @@ class BattleMenu extends HTMLElement {
 
     container.querySelectorAll(".btn-item-card").forEach((btn) => {
       btn.addEventListener("click", () => {
-        document.dispatchEvent(new CustomEvent("useItem", { detail: { itemId: btn.dataset.itemId } }));
+        document.dispatchEvent(
+          new CustomEvent("useItem", { detail: { itemId: btn.dataset.itemId } })
+        );
         this.back("items");
       });
     });

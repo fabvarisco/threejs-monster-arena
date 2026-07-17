@@ -1,9 +1,22 @@
 const TYPE_COLORS = {
-  fire: "#F08030", water: "#6890F0", grass: "#78C850", electric: "#F8D030",
-  psychic: "#F85888", ice: "#98D8D8", dragon: "#7038F8", dark: "#705848",
-  fairy: "#EE99AC", normal: "#A8A878", fighting: "#C03028", flying: "#A890F0",
-  poison: "#A040A0", ground: "#E0C068", rock: "#B8A038", bug: "#A8B820",
-  ghost: "#705898", steel: "#B8B8D0",
+  fire: "#F08030",
+  water: "#6890F0",
+  grass: "#78C850",
+  electric: "#F8D030",
+  psychic: "#F85888",
+  ice: "#98D8D8",
+  dragon: "#7038F8",
+  dark: "#705848",
+  fairy: "#EE99AC",
+  normal: "#A8A878",
+  fighting: "#C03028",
+  flying: "#A890F0",
+  poison: "#A040A0",
+  ground: "#E0C068",
+  rock: "#B8A038",
+  bug: "#A8B820",
+  ghost: "#705898",
+  steel: "#B8B8D0",
 };
 
 function hpColor(pct) {
@@ -42,7 +55,10 @@ class MonsterRosterPanel extends HTMLElement {
     const active = Number(this.getAttribute("active") ?? 0) === index;
     const color = hpColor(hpPct);
     const typeBadges = (m.types ?? [m.type].filter(Boolean))
-      .map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t] ?? "#777"}">${t}</span>`)
+      .map(
+        (t) =>
+          `<span class="type-badge" style="background:${TYPE_COLORS[t] ?? "#777"}">${t}</span>`
+      )
       .join("");
 
     return `
@@ -60,12 +76,16 @@ class MonsterRosterPanel extends HTMLElement {
             </div>
             <span class="hp-text">${currentHp}/${maxHp}</span>
           </div>
-          ${this.hasAttribute("hide-stats") ? "" : `
+          ${
+            this.hasAttribute("hide-stats")
+              ? ""
+              : `
           <div class="stats-row">
             <span class="stat"><em>ATK</em>${m.damage}</span>
             <span class="stat"><em>DEF</em>${m.defense}</span>
             <span class="stat"><em>SPD</em>${m.speed}</span>
-          </div>`}
+          </div>`
+          }
         </div>
       </div>`;
   }
@@ -75,31 +95,32 @@ class MonsterRosterPanel extends HTMLElement {
       <style>
         :host {
           position: fixed;
-          left: 12px;
-          bottom: 120px;
+          left: 0.75rem;
+          bottom: 7.5rem;
           font-family: Nunito, sans-serif;
           display: flex;
           flex-direction: column;
           gap: 6px;
           max-height: calc(100vh - 160px);
+          max-height: calc(100dvh - 10rem);
           overflow-y: auto;
           pointer-events: none;
         }
         :host([side="right"]) {
           left: auto;
-          right: 12px;
+          right: 0.75rem;
           bottom: auto;
-          top: calc(64px + 12px);
+          top: calc(var(--header-h, 4rem) + 0.75rem);
         }
         .card {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 0.625rem;
           background: rgba(0,0,0,0.82);
           border: 2px solid rgba(255,255,255,0.25);
-          border-radius: 14px;
-          padding: 8px 14px 8px 8px;
-          width: 280px;
+          border-radius: 0.875rem;
+          padding: 0.5rem 0.875rem 0.5rem 0.5rem;
+          width: 17.5rem;
           box-sizing: border-box;
         }
         .card.active {
@@ -110,8 +131,8 @@ class MonsterRosterPanel extends HTMLElement {
           opacity: 0.5;
         }
         .sprite {
-          width: 58px;
-          height: 58px;
+          width: 3.625rem;
+          height: 3.625rem;
           image-rendering: pixelated;
           object-fit: contain;
           flex-shrink: 0;
@@ -132,7 +153,7 @@ class MonsterRosterPanel extends HTMLElement {
         .name {
           color: white;
           font-weight: 700;
-          font-size: 15px;
+          font-size: 0.9375rem;
           text-transform: capitalize;
         }
         .types {
@@ -140,9 +161,9 @@ class MonsterRosterPanel extends HTMLElement {
           gap: 3px;
         }
         .type-badge {
-          padding: 2px 8px;
-          border-radius: 8px;
-          font-size: 11px;
+          padding: 2px 0.5rem;
+          border-radius: 0.5rem;
+          font-size: 0.6875rem;
           font-weight: 600;
           text-transform: capitalize;
           color: white;
@@ -154,10 +175,10 @@ class MonsterRosterPanel extends HTMLElement {
         }
         .hp-label {
           color: #aaa;
-          font-size: 10px;
+          font-size: 0.625rem;
           font-weight: 700;
           text-transform: uppercase;
-          width: 18px;
+          width: 1.125rem;
           flex-shrink: 0;
         }
         .hp-bar-bg {
@@ -174,47 +195,78 @@ class MonsterRosterPanel extends HTMLElement {
         }
         .hp-text {
           color: white;
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 700;
           white-space: nowrap;
-          width: 52px;
+          width: 3.25rem;
           text-align: right;
           flex-shrink: 0;
         }
         .stats-row {
           display: flex;
-          gap: 8px;
+          gap: 0.5rem;
         }
         .stat {
           color: white;
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 600;
         }
         .stat em {
           font-style: normal;
           color: #aaa;
-          font-size: 10px;
+          font-size: 0.625rem;
           margin-right: 2px;
         }
 
         @media (max-width: 1024px) {
           .card {
-            width: 230px;
-            padding: 6px 10px 6px 6px;
+            width: 14.375rem;
+            padding: 0.375rem 0.625rem 0.375rem 0.375rem;
           }
           .sprite {
-            width: 44px;
-            height: 44px;
+            width: 2.75rem;
+            height: 2.75rem;
           }
           .name {
-            font-size: 13px;
+            font-size: 0.8125rem;
           }
           .hp-text {
-            width: 46px;
-            font-size: 11px;
+            width: 2.875rem;
+            font-size: 0.6875rem;
           }
           .stat {
-            font-size: 12px;
+            font-size: 0.75rem;
+          }
+        }
+
+        @media (max-width: 600px) {
+          /* Versão compacta: só nome + barra de HP, ao lado do menu de batalha. */
+          :host {
+            left: 0.5rem;
+            bottom: 6.5rem;
+          }
+          :host([side="right"]) {
+            right: 0.5rem;
+          }
+          .card {
+            width: 11rem;
+            gap: 0.375rem;
+            padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+          }
+          .sprite {
+            width: 2rem;
+            height: 2rem;
+          }
+          .name {
+            font-size: 0.75rem;
+          }
+          .types,
+          .stats-row {
+            display: none;
+          }
+          .hp-text {
+            width: 2.5rem;
+            font-size: 0.625rem;
           }
         }
       </style>

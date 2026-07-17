@@ -8,9 +8,13 @@ class ItemRewardScreen extends HTMLElement {
     const canCatch = enemy && hasSlot;
 
     const allItems = Object.values(itemsList);
-    const itemPicks = [...allItems].sort(() => Math.random() - 0.5).slice(0, canCatch ? 2 : 3);
+    const itemPicks = [...allItems]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, canCatch ? 2 : 3);
 
-    const cards = canCatch ? this._insertAt(itemPicks, { _isPokemon: true, monster: enemy }) : itemPicks;
+    const cards = canCatch
+      ? this._insertAt(itemPicks, { _isPokemon: true, monster: enemy })
+      : itemPicks;
 
     this._renderScreen(cards, canCatch);
   }
@@ -40,10 +44,13 @@ class ItemRewardScreen extends HTMLElement {
           justify-content: center;
           background: rgba(0, 0, 0, 0.78);
           font-family: 'Nunito', sans-serif;
+          overflow-y: auto;
+          padding: 1rem;
+          box-sizing: border-box;
         }
 
         .title {
-          font-size: 3rem;
+          font-size: clamp(2rem, 8vw, 3rem);
           font-weight: 700;
           color: #ffd700;
           margin: 0 0 0.25rem;
@@ -60,6 +67,8 @@ class ItemRewardScreen extends HTMLElement {
 
         .cards {
           display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
           gap: 1.25rem;
           align-items: stretch;
         }
@@ -67,10 +76,10 @@ class ItemRewardScreen extends HTMLElement {
         .card {
           background: black;
           border: white 3px solid;
-          border-radius: 16px;
+          border-radius: 1rem;
           padding: 2rem 1.5rem;
-          width: 180px;
-          min-height: 240px;
+          width: 11.25rem;
+          min-height: 15rem;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -111,8 +120,8 @@ class ItemRewardScreen extends HTMLElement {
         }
 
         .poke-sprite {
-          width: 80px;
-          height: 80px;
+          width: 5rem;
+          height: 5rem;
           object-fit: contain;
           image-rendering: pixelated;
           animation: bounce 0.7s infinite alternate ease-in-out;
@@ -132,6 +141,13 @@ class ItemRewardScreen extends HTMLElement {
         }
 
         /* Item card */
+        .col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
         .icon {
           font-size: 2.5rem;
           line-height: 1;
@@ -171,25 +187,67 @@ class ItemRewardScreen extends HTMLElement {
           from { transform: translateY(0); }
           to   { transform: translateY(-8px); }
         }
+
+        @media (max-width: 600px) {
+          .subtitle {
+            margin-bottom: 1.25rem;
+          }
+          .cards {
+            flex-direction: column;
+            width: min(20rem, 100%);
+          }
+          .card,
+          .card-pokemon {
+            flex-direction: row;
+            justify-content: flex-start;
+            width: 100%;
+            min-height: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            gap: 1rem;
+          }
+          .name,
+          .desc,
+          .poke-name,
+          .poke-desc {
+            text-align: left;
+          }
+          .poke-sprite {
+            width: 3.5rem;
+            height: 3.5rem;
+          }
+          .col {
+            align-items: flex-start;
+            gap: 0.25rem;
+          }
+        }
       </style>
 
       <h1 class="title">Victory!</h1>
       <p class="subtitle">Choose ${canCatch ? "a reward" : "an item as reward"}</p>
       <div class="cards">
-        ${cards.map(card => card._isPokemon ? this._pokemonCard(card.monster) : this._itemCard(card)).join("")}
+        ${cards.map((card) => (card._isPokemon ? this._pokemonCard(card.monster) : this._itemCard(card))).join("")}
       </div>
     `;
 
-    shadow.querySelectorAll(".card").forEach(card => {
+    shadow.querySelectorAll(".card").forEach((card) => {
       card.addEventListener("click", () => {
         if (card.dataset.type === "pokemon") {
           const monster = JSON.parse(card.dataset.monster);
-          document.dispatchEvent(new CustomEvent("rewardSelected", { detail: { type: "pokemon", pokemon: monster } }));
+          document.dispatchEvent(
+            new CustomEvent("rewardSelected", {
+              detail: { type: "pokemon", pokemon: monster },
+            })
+          );
         } else {
           const itemId = card.dataset.id;
           player.inventory[itemId] = (player.inventory[itemId] ?? 0) + 1;
           document.dispatchEvent(new CustomEvent("inventoryChanged"));
-          document.dispatchEvent(new CustomEvent("rewardSelected", { detail: { type: "item", itemId } }));
+          document.dispatchEvent(
+            new CustomEvent("rewardSelected", {
+              detail: { type: "item", itemId },
+            })
+          );
         }
         this.remove();
       });
@@ -200,8 +258,10 @@ class ItemRewardScreen extends HTMLElement {
     return `
       <button class="card" data-type="item" data-id="${item.id}">
         <span class="icon">${this._icon(item.category)}</span>
-        <span class="name">${item.name}</span>
-        <span class="desc">${item.description}</span>
+        <span class="col">
+          <span class="name">${item.name}</span>
+          <span class="desc">${item.description}</span>
+        </span>
       </button>
     `;
   }
@@ -212,8 +272,10 @@ class ItemRewardScreen extends HTMLElement {
       <button class="card card-pokemon" data-type="pokemon" data-monster='${monsterJson}'>
         <span class="catch-badge">Capturar</span>
         <img class="poke-sprite" src="${monster.sprites?.front ?? ""}">
-        <span class="poke-name">${monster.name}</span>
-        <span class="poke-desc">Adicionar ao time!</span>
+        <span class="col">
+          <span class="poke-name">${monster.name}</span>
+          <span class="poke-desc">Adicionar ao time!</span>
+        </span>
       </button>
     `;
   }

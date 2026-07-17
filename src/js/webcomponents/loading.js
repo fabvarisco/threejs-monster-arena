@@ -6,7 +6,7 @@ class Loading extends HTMLElement {
 
   connectedCallback() {
     this.shadowRoot.innerHTML = `
-    <div id="loading" style="position:absolute; height:100vh; width:100vw; background: black; opacity: 0.5;">
+    <div id="loading" style="position:fixed; inset:0; background: black; opacity: 0.5;">
         <h1 style="position:relative; color: white; display:flex; justify-content:center;">
             LOADING....
         </h1>

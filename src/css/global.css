@@ -1,15 +1,23 @@
+html {
+  /* 16px até 1920px de largura; acima disso a UI inteira escala junto (rem) até 1.75x em 4K */
+  font-size: clamp(16px, 0.8333vw, 28px);
+}
+
 :root {
   font-family: Nunito;
+  --header-h: 4rem;
 }
 body {
   margin: 0;
+  overflow: hidden;
 }
 
 canvas {
-  width: 100vw;
+  width: 100%;
   height: calc(100vh - 64px);
+  height: calc(100dvh - var(--header-h));
   display: block;
-  margin-top: 64px;
+  margin-top: var(--header-h);
 }
 
 body {
@@ -17,7 +25,6 @@ body {
   background-position: center;
   background-attachment: fixed;
 }
-
 
 /* ── Battle menu toggle ─────────────────────────────────────── */
 
@@ -39,7 +46,17 @@ body {
   .container {
     top: 65%;
     left: auto;
-    right: 16px;
+    right: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    top: auto;
+    left: auto;
+    right: 0.5rem;
+    bottom: 6.5rem; /* acima do party HUD */
+    width: 10.5rem; /* força os botões a empilharem */
   }
 }
 

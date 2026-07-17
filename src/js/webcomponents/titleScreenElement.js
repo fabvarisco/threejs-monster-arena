@@ -18,7 +18,7 @@ class TitleScreenElement extends HTMLElement {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 16px;
+          gap: 1rem;
           font-family: 'Nunito', sans-serif;
           z-index: 10;
           text-align: center;
@@ -41,11 +41,17 @@ class TitleScreenElement extends HTMLElement {
           text-transform: uppercase;
         }
         .icon { display: flex; align-items: center; }
-        .img-size { width: 34px; height: 34px; margin-right: 22px; }
+        .img-size { width: 2.125rem; height: 2.125rem; margin-right: 1.375rem; }
 
         @media (max-width: 1024px) {
           h1 {
             font-size: 2.5rem;
+          }
+        }
+
+        @media (max-width: 600px) {
+          h1 {
+            font-size: clamp(2rem, 9vw, 2.5rem);
           }
         }
       </style>
@@ -53,9 +59,11 @@ class TitleScreenElement extends HTMLElement {
       <button id="start-game" class="btn btn-wrapper">Start Game<span class="icon"><img class="img-size" src="/battle_icon.png"></span></button>
     `;
 
-    this.shadowRoot.getElementById("start-game").addEventListener("click", () => {
-      this.dispatchEvent(new CustomEvent("startgame", { bubbles: true }));
-    });
+    this.shadowRoot
+      .getElementById("start-game")
+      .addEventListener("click", () => {
+        this.dispatchEvent(new CustomEvent("startgame", { bubbles: true }));
+      });
   }
 }
 

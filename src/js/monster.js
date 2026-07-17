@@ -49,7 +49,6 @@ export default class Monster {
     this._opponentInfo = null;
     this._mesh = null;
     this._material = null;
-    this._htmlContainer = null;
     this._flashStartTime = null;
     this._flashDuration = 500;
     this._healFlashStartTime = null;
@@ -68,7 +67,6 @@ export default class Monster {
   async _init() {
     await this._loadSprite();
     this._addListeners();
-    this._createHtmlContainer();
   }
 
   async _loadSprite() {
@@ -99,7 +97,11 @@ export default class Monster {
 
     const geometry = new THREE.PlaneGeometry(1, 1);
     this._mesh = new THREE.Mesh(geometry, this._material);
-    this._mesh.position.set(this._position.x, this._position.y, this._position.z);
+    this._mesh.position.set(
+      this._position.x,
+      this._position.y,
+      this._position.z
+    );
     this._mesh.scale.setScalar(this._scale);
     this._scene.add(this._mesh);
 
@@ -139,7 +141,9 @@ export default class Monster {
 
   _playExitAnimation() {
     this._exitAnimStartTime = performance.now();
-    return new Promise(resolve => setTimeout(resolve, this._exitAnimDuration));
+    return new Promise((resolve) =>
+      setTimeout(resolve, this._exitAnimDuration)
+    );
   }
 
   _playEnterAnimation() {
@@ -157,8 +161,10 @@ export default class Monster {
   Destroy() {
     const btn1 = document.getElementById("attack1");
     const btn2 = document.getElementById("attack2");
-    if (btn1 && this._onAttack1) btn1.removeEventListener("click", this._onAttack1);
-    if (btn2 && this._onAttack2) btn2.removeEventListener("click", this._onAttack2);
+    if (btn1 && this._onAttack1)
+      btn1.removeEventListener("click", this._onAttack1);
+    if (btn2 && this._onAttack2)
+      btn2.removeEventListener("click", this._onAttack2);
     this._onAttack1 = null;
     this._onAttack2 = null;
     if (this._onUseItem) {
@@ -177,17 +183,14 @@ export default class Monster {
       this._mesh = null;
       this._material = null;
     }
-    if (this._htmlContainer) {
-      this._htmlContainer.remove();
-      this._htmlContainer = null;
-    }
   }
 
   _calculateDamage(attackerInfo, defenderInfo, attackIndex = 0) {
     const atk = attackerInfo.damage;
     const def = Math.max(1, defenderInfo.defense);
     const base = Math.max(1, atk - Math.floor(def / 2));
-    const attackType = attackerInfo.attacks?.[attackIndex]?.type ?? attackerInfo.type;
+    const attackType =
+      attackerInfo.attacks?.[attackIndex]?.type ?? attackerInfo.type;
     const defenderTypes = defenderInfo.types ?? [defenderInfo.type ?? "normal"];
     const typeMultiplier = getTypeMultiplier(attackType, defenderTypes);
     const variance = 0.85 + Math.random() * 0.15;
@@ -201,7 +204,11 @@ export default class Monster {
         this._playAttackAnimation(attackIndex);
         const damage = this._calculateDamage(
           this._information,
-          this._opponentInfo ?? { defense: 1, type: "normal", types: ["normal"] },
+          this._opponentInfo ?? {
+            defense: 1,
+            type: "normal",
+            types: ["normal"],
+          },
           attackIndex
         );
         this._events["monsterEnemyHpChanged"].dispatchEvent({
@@ -212,8 +219,12 @@ export default class Monster {
 
       this._onAttack1 = () => onAttack(0);
       this._onAttack2 = () => onAttack(1);
-      document.getElementById("attack1").addEventListener("click", this._onAttack1);
-      document.getElementById("attack2").addEventListener("click", this._onAttack2);
+      document
+        .getElementById("attack1")
+        .addEventListener("click", this._onAttack1);
+      document
+        .getElementById("attack2")
+        .addEventListener("click", this._onAttack2);
 
       this._onUseItem = (e) => {
         const { itemId } = e.detail;
@@ -228,21 +239,28 @@ export default class Monster {
       };
       document.addEventListener("useItem", this._onUseItem);
 
-      this._events["monsterPlayerHpChanged"].addEventListener("monsterPlayerHpChanged", (e) => {
-        this._playDamageAnimation();
-        this._damage(e.damage);
-        if (this._hp <= 0) {
-          this._playDeathAnimation();
-          document.dispatchEvent(new CustomEvent("playerFainted"));
+      this._events["monsterPlayerHpChanged"].addEventListener(
+        "monsterPlayerHpChanged",
+        (e) => {
+          this._playDamageAnimation();
+          this._damage(e.damage);
+          if (this._hp <= 0) {
+            this._playDeathAnimation();
+            document.dispatchEvent(new CustomEvent("playerFainted"));
+          }
         }
-      });
+      );
     } else {
       this._onPlayerUsedItem = () => {
         setTimeout(() => {
           this._playAttackAnimation(0);
           const damage = this._calculateDamage(
             this._information,
-            this._opponentInfo ?? { defense: 1, type: "normal", types: ["normal"] }
+            this._opponentInfo ?? {
+              defense: 1,
+              type: "normal",
+              types: ["normal"],
+            }
           );
           this._events["monsterPlayerHpChanged"].dispatchEvent({
             type: "monsterPlayerHpChanged",
@@ -253,49 +271,42 @@ export default class Monster {
       };
       document.addEventListener("playerUsedItem", this._onPlayerUsedItem);
 
-      this._events["monsterEnemyHpChanged"].addEventListener("monsterEnemyHpChanged", (e) => {
-        this._playDamageAnimation();
-        this._damage(e.damage);
-        if (this._hp <= 0) {
-          this._playDeathAnimation();
-          document.dispatchEvent(new CustomEvent("enemyDefeated"));
-          return;
+      this._events["monsterEnemyHpChanged"].addEventListener(
+        "monsterEnemyHpChanged",
+        (e) => {
+          this._playDamageAnimation();
+          this._damage(e.damage);
+          if (this._hp <= 0) {
+            this._playDeathAnimation();
+            document.dispatchEvent(new CustomEvent("enemyDefeated"));
+            return;
+          }
+          setTimeout(() => {
+            this._playAttackAnimation(0);
+            const damage = this._calculateDamage(
+              this._information,
+              this._opponentInfo ?? {
+                defense: 1,
+                type: "normal",
+                types: ["normal"],
+              }
+            );
+            this._events["monsterPlayerHpChanged"].dispatchEvent({
+              type: "monsterPlayerHpChanged",
+              damage,
+            });
+            PlayerTurn();
+          }, 1500);
         }
-        setTimeout(() => {
-          this._playAttackAnimation(0);
-          const damage = this._calculateDamage(
-            this._information,
-            this._opponentInfo ?? { defense: 1, type: "normal", types: ["normal"] }
-          );
-          this._events["monsterPlayerHpChanged"].dispatchEvent({
-            type: "monsterPlayerHpChanged",
-            damage,
-          });
-          PlayerTurn();
-        }, 1500);
-      });
+      );
     }
   }
 
   _damage(value) {
     this._hp = Math.max(0, this._hp - value);
     this._information.currentHp = this._hp;
-    this._updateHtmlContainer();
-    if (this._isPlayer) document.dispatchEvent(new CustomEvent("playerHpChanged"));
-  }
-
-  _createHtmlContainer() {
-    this._htmlContainer = document.createElement("monster-hp-element");
-    this._htmlContainer.setAttribute("name", this._information.name);
-    this._htmlContainer.setAttribute("hp", this._hp);
-    this._htmlContainer.setAttribute("max-hp", this._maxHp);
-    if (this._isPlayer) this._htmlContainer.setAttribute("player", "");
-    document.body.appendChild(this._htmlContainer);
-  }
-
-  _updateHtmlContainer() {
-    if (!this._htmlContainer) return;
-    this._htmlContainer.setAttribute("hp", this._hp);
+    if (this._isPlayer)
+      document.dispatchEvent(new CustomEvent("playerHpChanged"));
   }
 
   Update() {
@@ -311,7 +322,12 @@ export default class Monster {
       if (t === 0) this._flashStartTime = null;
     }
     if (this._healFlashStartTime !== null && this._material) {
-      const t = Math.max(0, 1 - (performance.now() - this._healFlashStartTime) / this._healFlashDuration);
+      const t = Math.max(
+        0,
+        1 -
+          (performance.now() - this._healFlashStartTime) /
+            this._healFlashDuration
+      );
       this._material.uniforms.uHeal.value = t;
       if (t === 0) this._healFlashStartTime = null;
     }
@@ -322,13 +338,20 @@ export default class Monster {
       if (t === 0) this._pulseStartTime = null;
     }
     if (this._exitAnimStartTime !== null && this._material) {
-      const t = Math.max(0, 1 - (performance.now() - this._exitAnimStartTime) / this._exitAnimDuration);
+      const t = Math.max(
+        0,
+        1 -
+          (performance.now() - this._exitAnimStartTime) / this._exitAnimDuration
+      );
       this._material.uniforms.uOpacity.value = t;
       this._material.uniforms.uOffsetX.value = -3 * (1 - t);
       if (t === 0) this._exitAnimStartTime = null;
     }
     if (this._enterAnimStartTime !== null && this._material) {
-      const t = Math.min(1, (performance.now() - this._enterAnimStartTime) / this._enterAnimDuration);
+      const t = Math.min(
+        1,
+        (performance.now() - this._enterAnimStartTime) / this._enterAnimDuration
+      );
       this._material.uniforms.uOpacity.value = t;
       this._material.uniforms.uOffsetX.value = 3 * (1 - t);
       if (t === 1) this._enterAnimStartTime = null;

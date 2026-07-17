@@ -1,2 +1,2 @@
-export const none = "none"
-export const block = "block"
+export const none = "none";
+export const block = "block";

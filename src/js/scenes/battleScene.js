@@ -2,11 +2,22 @@ import * as THREE from "three";
 import { EventDispatcher } from "three";
 
 import { loaderOBJ } from "../../utils/loader";
-import { POKEMON_ROSTER, Enemy, player, SPRITE_Y_OFFSETS } from "../../utils/monsters";
+import {
+  POKEMON_ROSTER,
+  Enemy,
+  player,
+  SPRITE_Y_OFFSETS,
+} from "../../utils/monsters";
 import { EnemyTurn, PlayerTurn } from "../../utils/utils";
 import Monster from "../monster";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
-import { vpWidth, vpHeight, vpAspect, vpFov } from "../../utils/viewport";
+import {
+  vpWidth,
+  vpHeight,
+  vpAspect,
+  vpFov,
+  addViewportListeners,
+} from "../../utils/viewport";
 import itemsList from "../../utils/items";
 
 export default class BattleScene {
@@ -46,7 +57,9 @@ export default class BattleScene {
     this._camera();
     this._light();
     this._createObject();
-    window.addEventListener("resize", this._boundOnWindowResize);
+    this._removeViewportListeners = addViewportListeners(
+      this._boundOnWindowResize
+    );
   }
 
   _document() {
@@ -64,7 +77,8 @@ export default class BattleScene {
   _addListener() {
     this.Events["changeTurn"].addEventListener("changeTurn", () => {
       this.Turn = !this.Turn;
-      if (this.Turn) PlayerTurn(); else EnemyTurn();
+      if (this.Turn) PlayerTurn();
+      else EnemyTurn();
     });
     document.addEventListener("enemyDefeated", this._onEnemyDefeated);
     document.addEventListener("playerFainted", this._onPlayerFainted);
@@ -83,7 +97,9 @@ export default class BattleScene {
   }
 
   _maskEnemyParty(monsters) {
-    return monsters.map(({ damage: _d, defense: _def, speed: _spd, attacks: _a, ...rest }) => rest);
+    return monsters.map(
+      ({ damage: _d, defense: _def, speed: _spd, attacks: _a, ...rest }) => rest
+    );
   }
 
   // ── Difficulty scaling ────────────────────────────────────────────────────
@@ -108,7 +124,7 @@ export default class BattleScene {
   }
 
   async _generateEnemyGroup(excludeNames) {
-    const available = POKEMON_ROSTER.filter(n => !excludeNames.includes(n));
+    const available = POKEMON_ROSTER.filter((n) => !excludeNames.includes(n));
     const size = this._enemyGroupSize();
     const pool = [...available];
     const picked = [];
@@ -117,21 +133,28 @@ export default class BattleScene {
       picked.push(pool.splice(idx, 1)[0]);
     }
     return Promise.all(
-      picked.map(async n => this._scaleMonster(mapPokemonToMonster(await fetchPokemon(n))))
+      picked.map(async (n) =>
+        this._scaleMonster(mapPokemonToMonster(await fetchPokemon(n)))
+      )
     );
   }
 
   // ── HP tracking ───────────────────────────────────────────────────────────
 
   _handlePlayerHpChanged() {
-    const panel = this._gameElement?.querySelector("monster-roster-panel:not([side])");
+    const panel = this._gameElement?.querySelector(
+      "monster-roster-panel:not([side])"
+    );
     if (panel) panel.setAttribute("party", JSON.stringify(player.monsters));
   }
 
   _handleInventoryChanged() {
-    const activeMonster = this.objects.find(m => m._isPlayer);
-    if (activeMonster) player.monsters[this._activePartyIdx].currentHp = activeMonster._hp;
-    const panel = this._gameElement?.querySelector("monster-roster-panel:not([side])");
+    const activeMonster = this.objects.find((m) => m._isPlayer);
+    if (activeMonster)
+      player.monsters[this._activePartyIdx].currentHp = activeMonster._hp;
+    const panel = this._gameElement?.querySelector(
+      "monster-roster-panel:not([side])"
+    );
     if (panel) panel.setAttribute("party", JSON.stringify(player.monsters));
   }
 
@@ -140,12 +163,21 @@ export default class BattleScene {
     const m = Enemy.monsters[idx];
     if (!m) return;
     m.currentHp = Math.max(0, (m.currentHp ?? m.life) - e.damage);
-    const panel = this._gameElement?.querySelector('monster-roster-panel[side="right"]');
-    if (panel) panel.setAttribute("party", JSON.stringify(this._maskEnemyParty(Enemy.monsters)));
+    const panel = this._gameElement?.querySelector(
+      'monster-roster-panel[side="right"]'
+    );
+    if (panel)
+      panel.setAttribute(
+        "party",
+        JSON.stringify(this._maskEnemyParty(Enemy.monsters))
+      );
   }
 
   _bindEnemyHpListener() {
-    this.Events["monsterEnemyHpChanged"].addEventListener("monsterEnemyHpChanged", this._onEnemyHpChanged);
+    this.Events["monsterEnemyHpChanged"].addEventListener(
+      "monsterEnemyHpChanged",
+      this._onEnemyHpChanged
+    );
   }
 
   // ── Enemy switch (mid-battle) ─────────────────────────────────────────────
@@ -158,13 +190,25 @@ export default class BattleScene {
     const newEnemyInfo = Enemy.monsters[nextIdx];
     Enemy.selectedMonster = newEnemyInfo;
 
-    const enemyPanel = this._gameElement?.querySelector('monster-roster-panel[side="right"]');
-    if (enemyPanel) enemyPanel.setAttribute("party", JSON.stringify(this._maskEnemyParty(Enemy.monsters)));
+    const enemyPanel = this._gameElement?.querySelector(
+      'monster-roster-panel[side="right"]'
+    );
+    if (enemyPanel)
+      enemyPanel.setAttribute(
+        "party",
+        JSON.stringify(this._maskEnemyParty(Enemy.monsters))
+      );
 
-    const playerMonster = this.objects.find(m => m._isPlayer);
+    const playerMonster = this.objects.find((m) => m._isPlayer);
     const { scale: nes, y: ney } = this._spriteParams(newEnemyInfo);
     const newEnemy = new Monster(
-      this.scene, { x: 0, y: ney, z: -6 }, nes, this.Events, newEnemyInfo, false, this.camera
+      this.scene,
+      { x: 0, y: ney, z: -6 },
+      nes,
+      this.Events,
+      newEnemyInfo,
+      false,
+      this.camera
     );
     newEnemy.setOpponent(player.monsters[this._activePartyIdx]);
     playerMonster?.setOpponent(newEnemyInfo);
@@ -178,11 +222,9 @@ export default class BattleScene {
   async _handleEnemyDefeated() {
     Enemy.monsters[this._activeEnemyIdx].currentHp = 0;
 
-    const deadEnemy = this.objects.find(m => !m._isPlayer);
+    const deadEnemy = this.objects.find((m) => !m._isPlayer);
     deadEnemy?.Destroy();
-    this.objects = this.objects.filter(m => m._isPlayer);
-
-    // Check if the enemy party still has alive members
+    this.objects = this.objects.filter((m) => m._isPlayer);
     const nextEnemyIdx = Enemy.monsters.findIndex(
       (m, i) => i !== this._activeEnemyIdx && (m.currentHp ?? m.life) > 0
     );
@@ -192,7 +234,6 @@ export default class BattleScene {
       return;
     }
 
-    // All enemies down — full victory
     player.wins = (player.wins ?? 0) + 1;
 
     this.Events["monsterEnemyHpChanged"] = new EventDispatcher();
@@ -203,46 +244,73 @@ export default class BattleScene {
     const rewardScreen = document.createElement("item-reward-screen");
     rewardScreen.setAttribute("enemy", JSON.stringify(Enemy.selectedMonster));
     this._gameElement.appendChild(rewardScreen);
-    const rewardEvent = await new Promise(resolve => document.addEventListener("rewardSelected", resolve, { once: true }));
+    const rewardEvent = await new Promise((resolve) =>
+      document.addEventListener("rewardSelected", resolve, { once: true })
+    );
 
     if (rewardEvent.detail?.type === "pokemon") {
-      player.monsters.push({ ...rewardEvent.detail.pokemon, currentHp: rewardEvent.detail.pokemon.life });
+      player.monsters.push({
+        ...rewardEvent.detail.pokemon,
+        currentHp: rewardEvent.detail.pokemon.life,
+      });
       const partyHud = this._gameElement?.querySelector("party-hud");
-      if (partyHud) partyHud.setAttribute("party", JSON.stringify(player.monsters));
-      const rosterPanel = this._gameElement?.querySelector("monster-roster-panel");
-      if (rosterPanel) rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
+      if (partyHud)
+        partyHud.setAttribute("party", JSON.stringify(player.monsters));
+      const rosterPanel = this._gameElement?.querySelector(
+        "monster-roster-panel"
+      );
+      if (rosterPanel)
+        rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
     } else if (rewardEvent.detail?.type === "item") {
       const item = itemsList[rewardEvent.detail.itemId];
       if (item?.category === "stat_boost") {
-        const activeMonster = this.objects.find(m => m._isPlayer);
+        const activeMonster = this.objects.find((m) => m._isPlayer);
         if (activeMonster) {
           item.func(activeMonster);
           if ((player.inventory[rewardEvent.detail.itemId] ?? 0) > 0)
             player.inventory[rewardEvent.detail.itemId]--;
         }
-        const rosterPanel = this._gameElement?.querySelector("monster-roster-panel:not([side])");
-        if (rosterPanel) rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
+        const rosterPanel = this._gameElement?.querySelector(
+          "monster-roster-panel:not([side])"
+        );
+        if (rosterPanel)
+          rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
       }
     }
 
     this._gameElement.appendChild(this._loadingElement);
 
-    const excludeNames = [this._playerInfo.name, ...player.monsters.map(m => m.name)];
+    const excludeNames = [
+      this._playerInfo.name,
+      ...player.monsters.map((m) => m.name),
+    ];
     const enemyGroup = await this._generateEnemyGroup(excludeNames);
 
     this._activeEnemyIdx = 0;
     Enemy.selectedMonster = enemyGroup[0];
     Enemy.monsters = enemyGroup;
 
-    const enemyPanel = this._gameElement?.querySelector('monster-roster-panel[side="right"]');
-    if (enemyPanel) enemyPanel.setAttribute("party", JSON.stringify(this._maskEnemyParty(Enemy.monsters)));
+    const enemyPanel = this._gameElement?.querySelector(
+      'monster-roster-panel[side="right"]'
+    );
+    if (enemyPanel)
+      enemyPanel.setAttribute(
+        "party",
+        JSON.stringify(this._maskEnemyParty(Enemy.monsters))
+      );
 
     this._gameElement.removeChild(this._loadingElement);
 
-    const playerMonster = this.objects.find(m => m._isPlayer);
+    const playerMonster = this.objects.find((m) => m._isPlayer);
     const { scale: vs, y: vy } = this._spriteParams(enemyGroup[0]);
     const newEnemy = new Monster(
-      this.scene, { x: 0, y: vy, z: -6 }, vs, this.Events, enemyGroup[0], false, this.camera
+      this.scene,
+      { x: 0, y: vy, z: -6 },
+      vs,
+      this.Events,
+      enemyGroup[0],
+      false,
+      this.camera
     );
     newEnemy.setOpponent(player.monsters[this._activePartyIdx]);
     playerMonster?.setOpponent(enemyGroup[0]);
@@ -261,8 +329,11 @@ export default class BattleScene {
 
   _handlePlayerFainted() {
     player.monsters[this._activePartyIdx].currentHp = 0;
-    const rosterPanelFaint = this._gameElement?.querySelector("monster-roster-panel");
-    if (rosterPanelFaint) rosterPanelFaint.setAttribute("party", JSON.stringify(player.monsters));
+    const rosterPanelFaint = this._gameElement?.querySelector(
+      "monster-roster-panel"
+    );
+    if (rosterPanelFaint)
+      rosterPanelFaint.setAttribute("party", JSON.stringify(player.monsters));
 
     const nextIdx = player.monsters.findIndex(
       (m, i) => i !== this._activePartyIdx && (m.currentHp ?? m.life) > 0
@@ -288,15 +359,15 @@ export default class BattleScene {
     const partyHudSwitch = this._gameElement?.querySelector("party-hud");
     if (partyHudSwitch) partyHudSwitch.setAttribute("disabled", "");
 
-    const activeMonster = this.objects.find(m => m._isPlayer);
-    const enemyMonster = this.objects.find(m => !m._isPlayer);
+    const activeMonster = this.objects.find((m) => m._isPlayer);
+    const enemyMonster = this.objects.find((m) => !m._isPlayer);
 
     if (activeMonster) {
       player.monsters[this._activePartyIdx].currentHp = activeMonster._hp;
       await activeMonster._playExitAnimation();
       activeMonster.Destroy();
     }
-    this.objects = this.objects.filter(m => !m._isPlayer);
+    this.objects = this.objects.filter((m) => !m._isPlayer);
 
     this.Events["monsterPlayerHpChanged"] = new EventDispatcher();
 
@@ -305,7 +376,13 @@ export default class BattleScene {
 
     const { scale: nps, y: npy } = this._spriteParams(newInfo);
     const newPlayer = new Monster(
-      this.scene, { x: 0, y: npy, z: 6 }, nps, this.Events, newInfo, true, this.camera
+      this.scene,
+      { x: 0, y: npy, z: 6 },
+      nps,
+      this.Events,
+      newInfo,
+      true,
+      this.camera
     );
     newPlayer.setOpponent(Enemy.selectedMonster);
     newPlayer._playEnterAnimation();
@@ -317,7 +394,9 @@ export default class BattleScene {
       partyHud.setAttribute("active", String(toIdx));
       partyHud.setAttribute("party", JSON.stringify(player.monsters));
     }
-    const rosterPanel = this._gameElement?.querySelector("monster-roster-panel");
+    const rosterPanel = this._gameElement?.querySelector(
+      "monster-roster-panel"
+    );
     if (rosterPanel) {
       rosterPanel.setAttribute("active", String(toIdx));
       rosterPanel.setAttribute("party", JSON.stringify(player.monsters));
@@ -325,11 +404,17 @@ export default class BattleScene {
 
     if (!free) {
       EnemyTurn();
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
       if (enemyMonster) {
         enemyMonster._playAttackAnimation(0);
-        const damage = enemyMonster._calculateDamage(enemyMonster._information, newInfo);
-        this.Events["monsterPlayerHpChanged"].dispatchEvent({ type: "monsterPlayerHpChanged", damage });
+        const damage = enemyMonster._calculateDamage(
+          enemyMonster._information,
+          newInfo
+        );
+        this.Events["monsterPlayerHpChanged"].dispatchEvent({
+          type: "monsterPlayerHpChanged",
+          damage,
+        });
       }
       PlayerTurn();
     } else {
@@ -354,7 +439,12 @@ export default class BattleScene {
 
   _camera() {
     this.camera = new THREE.PerspectiveCamera(vpFov(60), vpAspect(), 1, 1000);
-    this.camera.position.set(2, 2, 12);
+    this.camera.position.set(this._cameraX(), 2, 12);
+  }
+
+  _cameraX() {
+    const t = Math.min(1, Math.max(0, (vpAspect() - 0.8) / (16 / 9 - 0.8)));
+    return 2 * t;
   }
 
   _light() {
@@ -382,7 +472,9 @@ export default class BattleScene {
 
     const playerInfo = this._selectedMonsterName?.sprites
       ? this._selectedMonsterName
-      : mapPokemonToMonster(await fetchPokemon(this._selectedMonsterName?.name ?? "charmander"));
+      : mapPokemonToMonster(
+          await fetchPokemon(this._selectedMonsterName?.name ?? "charmander")
+        );
 
     const enemyGroup = await this._generateEnemyGroup([playerInfo.name]);
 
@@ -409,15 +501,34 @@ export default class BattleScene {
     const enemyRosterPanel = document.createElement("monster-roster-panel");
     enemyRosterPanel.setAttribute("side", "right");
     enemyRosterPanel.setAttribute("hide-stats", "");
-    enemyRosterPanel.setAttribute("party", JSON.stringify(this._maskEnemyParty(Enemy.monsters)));
+    enemyRosterPanel.setAttribute(
+      "party",
+      JSON.stringify(this._maskEnemyParty(Enemy.monsters))
+    );
     this._gameElement.appendChild(enemyRosterPanel);
 
     this._bindEnemyHpListener();
 
     const { scale: ps, y: py } = this._spriteParams(playerInfo);
     const { scale: es, y: ey } = this._spriteParams(enemyGroup[0]);
-    const playerMonster = new Monster(this.scene, { x: 0, y: py, z: 6 }, ps, this.Events, playerInfo, true, this.camera);
-    const enemyMonster = new Monster(this.scene, { x: 0, y: ey, z: -6 }, es, this.Events, enemyGroup[0], false, this.camera);
+    const playerMonster = new Monster(
+      this.scene,
+      { x: 0, y: py, z: 6 },
+      ps,
+      this.Events,
+      playerInfo,
+      true,
+      this.camera
+    );
+    const enemyMonster = new Monster(
+      this.scene,
+      { x: 0, y: ey, z: -6 },
+      es,
+      this.Events,
+      enemyGroup[0],
+      false,
+      this.camera
+    );
     playerMonster.setOpponent(enemyGroup[0]);
     enemyMonster.setOpponent(playerInfo);
     this.objects.push(playerMonster, enemyMonster);
@@ -426,6 +537,7 @@ export default class BattleScene {
   _onWindowResize() {
     this.camera.aspect = vpAspect();
     this.camera.fov = vpFov(60);
+    this.camera.position.x = this._cameraX();
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(vpWidth(), vpHeight());
   }
@@ -433,7 +545,7 @@ export default class BattleScene {
   _sceneLoop(t) {
     if (this._deltaTime === null) this._deltaTime = t;
     this._gameLoop = requestAnimationFrame((t) => this._sceneLoop(t));
-    this.objects.forEach(el => el.Update());
+    this.objects.forEach((el) => el.Update());
     this._render();
     this._deltaTime = t;
   }
@@ -454,7 +566,7 @@ export default class BattleScene {
     document.removeEventListener("switchMonster", this._onSwitchMonster);
     document.removeEventListener("inventoryChanged", this._onInventoryChanged);
     document.removeEventListener("playerHpChanged", this._onPlayerHpChanged);
-    window.removeEventListener("resize", this._boundOnWindowResize);
+    this._removeViewportListeners?.();
     const battleMenu = this._gameElement?.querySelector("battle-menu");
     if (battleMenu) battleMenu.remove();
     const gameOver = this._gameElement?.querySelector("game-over");
@@ -463,8 +575,9 @@ export default class BattleScene {
     if (rewardScreen) rewardScreen.remove();
     const partyHud = this._gameElement?.querySelector("party-hud");
     if (partyHud) partyHud.remove();
-    this._gameElement?.querySelectorAll("monster-roster-panel").forEach(el => el.remove());
-    document.querySelectorAll("monster-hp-element").forEach(el => el.remove());
+    this._gameElement
+      ?.querySelectorAll("monster-roster-panel")
+      .forEach((el) => el.remove());
     this.controls?.dispose();
     this.renderer.dispose();
     this.scene = undefined;

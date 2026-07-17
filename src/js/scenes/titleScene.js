@@ -1,6 +1,12 @@
 import * as THREE from "three";
 import { loaderGLTF } from "../../utils/loader";
-import { vpWidth, vpHeight, vpAspect, vpFov } from "../../utils/viewport";
+import {
+  vpWidth,
+  vpHeight,
+  vpAspect,
+  vpFov,
+  addViewportListeners,
+} from "../../utils/viewport";
 
 export default class TitleScene {
   constructor() {
@@ -23,7 +29,9 @@ export default class TitleScene {
     this._light();
     this._createObject();
     this._addWebComponents();
-    window.addEventListener("resize", this._boundOnWindowResize);
+    this._removeViewportListeners = addViewportListeners(
+      this._boundOnWindowResize
+    );
   }
 
   _addWebComponents() {
@@ -73,7 +81,9 @@ export default class TitleScene {
   }
 
   async _createObject() {
-    const model = await loaderGLTF("/assets/low-poly-poke-ball/source/model.gltf");
+    const model = await loaderGLTF(
+      "/assets/low-poly-poke-ball/source/model.gltf"
+    );
     model.scale.setScalar(2);
     this._pokeball = model;
     this.scene.add(model);
@@ -101,9 +111,11 @@ export default class TitleScene {
   DestroyScene() {
     cancelAnimationFrame(this._gameLoop);
     this.renderer.setAnimationLoop(null);
-    window.removeEventListener("resize", this._boundOnWindowResize);
+    this._removeViewportListeners?.();
 
-    const titleScreenElement = this._gameElement?.querySelector("title-screen-element");
+    const titleScreenElement = this._gameElement?.querySelector(
+      "title-screen-element"
+    );
     if (titleScreenElement) this._gameElement.removeChild(titleScreenElement);
 
     document.body.style.backgroundImage = "";

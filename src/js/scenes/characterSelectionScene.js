@@ -2,7 +2,13 @@ import * as THREE from "three";
 
 import { POKEMON_ROSTER } from "../../utils/monsters";
 import { fetchPokemon, mapPokemonToMonster } from "../../api/fetchData";
-import { vpWidth, vpHeight, vpAspect, vpFov } from "../../utils/viewport";
+import {
+  vpWidth,
+  vpHeight,
+  vpAspect,
+  vpFov,
+  addViewportListeners,
+} from "../../utils/viewport";
 
 export default class CharacterSelectionScene {
   constructor() {
@@ -31,7 +37,11 @@ export default class CharacterSelectionScene {
     this._light();
     this._createObject();
 
-    const stubs = POKEMON_ROSTER.map(name => ({ name, sprites: null, _stub: true }));
+    const stubs = POKEMON_ROSTER.map((name) => ({
+      name,
+      sprites: null,
+      _stub: true,
+    }));
 
     this._gameElement.removeChild(this._loadingElement);
 
@@ -52,14 +62,18 @@ export default class CharacterSelectionScene {
       this._infoElement.setAttribute("monster", JSON.stringify(full));
     });
 
-    const firstFull = mapPokemonToMonster(await fetchPokemon(POKEMON_ROSTER[0]));
+    const firstFull = mapPokemonToMonster(
+      await fetchPokemon(POKEMON_ROSTER[0])
+    );
     list.updateMonster(firstFull);
     this._loadSelectedMonster(firstFull);
     this._infoElement.setAttribute("monster", JSON.stringify(firstFull));
 
     this._preloadPokemons(list);
 
-    window.addEventListener("resize", this._boundOnWindowResize);
+    this._removeViewportListeners = addViewportListeners(
+      this._boundOnWindowResize
+    );
   }
 
   async _preloadPokemons(list) {
@@ -69,9 +83,11 @@ export default class CharacterSelectionScene {
       if (!this.renderer) return; // scene destroyed mid-load
       const batch = remaining.slice(i, i + BATCH);
       const results = await Promise.allSettled(
-        batch.map(name => fetchPokemon(name).then(mapPokemonToMonster))
+        batch.map((name) => fetchPokemon(name).then(mapPokemonToMonster))
       );
-      const fulfilled = results.filter(r => r.status === "fulfilled").map(r => r.value);
+      const fulfilled = results
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value);
       if (fulfilled.length > 0) list.updateMonsters(fulfilled);
     }
   }
@@ -102,14 +118,12 @@ export default class CharacterSelectionScene {
   }
 
   _camera() {
-    this.camera = new THREE.PerspectiveCamera(
-      vpFov(60),
-      vpAspect(),
-      1,
-      1000
-    );
+    this.camera = new THREE.PerspectiveCamera(vpFov(60), vpAspect(), 1, 1000);
     this.camera.position.set(0, 1.5, 4);
-    this.camera.lookAt(0, 1.5, 0);
+    this.camera.lookAt(0, this._lookAtY(), 0);
+  }
+  _lookAtY() {
+    return vpAspect() < 0.9 ? 2.4 : 1.5;
   }
 
   _light() {
@@ -150,10 +164,16 @@ export default class CharacterSelectionScene {
       this._previewSprite = undefined;
     }
 
-    const texture = await new THREE.TextureLoader().loadAsync(monster.sprites.front);
+    const texture = await new THREE.TextureLoader().loadAsync(
+      monster.sprites.front
+    );
     texture.magFilter = THREE.NearestFilter;
 
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0,
+    });
     this._previewSprite = new THREE.Sprite(material);
     this._previewSprite.position.set(0, 1.5, 0);
     this._previewSprite.scale.setScalar(3);
@@ -166,6 +186,7 @@ export default class CharacterSelectionScene {
   _onWindowResize() {
     this.camera.aspect = vpAspect();
     this.camera.fov = vpFov(60);
+    this.camera.lookAt(0, this._lookAtY(), 0);
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(vpWidth(), vpHeight());
   }
@@ -191,7 +212,8 @@ export default class CharacterSelectionScene {
 
   _sceneLoop() {
     this._gameLoop = requestAnimationFrame((t) => {
-      const timeElapsed = this._lastFrameTime === null ? 0 : (t - this._lastFrameTime) / 1000;
+      const timeElapsed =
+        this._lastFrameTime === null ? 0 : (t - this._lastFrameTime) / 1000;
       this._lastFrameTime = t;
       this._updateFade(timeElapsed);
       this._render();
@@ -206,7 +228,7 @@ export default class CharacterSelectionScene {
   DestroyScene() {
     cancelAnimationFrame(this._gameLoop);
     this.renderer.setAnimationLoop(null);
-    window.removeEventListener("resize", this._boundOnWindowResize);
+    this._removeViewportListeners?.();
 
     this._gameElement?.querySelector("monster-list-element")?.remove();
     this._gameElement?.querySelector("monster-info-element")?.remove();

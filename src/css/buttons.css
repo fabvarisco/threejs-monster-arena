@@ -1,143 +1,166 @@
 .btn {
-    width: 264px;
-    height: 76px;
-    border-radius: 25px;
-    text-align: start;
-    padding-left: 24px;
-    font-weight: 600;
-    background: black;
-    color: white;
-    font-size: 24px;
-    font-family: Nunito;
-    border: white 6px solid;
-    margin-top: 5px;
-    margin-bottom: 5px;
+  width: 16.5rem;
+  height: 4.75rem;
+  border-radius: 1.5625rem;
+  text-align: start;
+  padding-left: 1.5rem;
+  font-weight: 600;
+  background: black;
+  color: white;
+  font-size: 1.5rem;
+  font-family: Nunito;
+  border: white 0.375rem solid;
+  margin-top: 0.3125rem;
+  margin-bottom: 0.3125rem;
 }
 
-.btn-back{
-    margin-top: 10px;
+.btn-back {
+  margin-top: 0.625rem;
 }
 
 .btn:hover {
-    cursor: pointer;
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
-    transform: scale(1);
-    animation: pulse 2s infinite;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+  transform: scale(1);
+  animation: pulse 2s infinite;
 }
 
 .btn-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1.25rem;
+}
+
+.icon {
+  margin: 0.625rem;
+  margin-top: 1.25rem;
+}
+
+.img-size {
+  height: 2.125rem;
 }
 
 .items-panel {
-    display: flex;
-    flex-direction: column;
-    width: 264px;
+  display: flex;
+  flex-direction: column;
+  width: 16.5rem;
 }
 
 #item-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    max-height: 22vh;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: white transparent;
-    padding: 4px 2px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  max-height: 22vh;
+  max-height: 22dvh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: white transparent;
+  padding: 0.25rem 0.125rem;
 }
 
 .btn-item-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 10px 6px;
-    border-radius: 16px;
-    border: white 3px solid;
-    background: black;
-    color: white;
-    cursor: pointer;
-    font-family: Nunito;
-    transition: opacity 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.625rem 0.375rem;
+  border-radius: 1rem;
+  border: white 3px solid;
+  background: black;
+  color: white;
+  cursor: pointer;
+  font-family: Nunito;
+  transition: opacity 0.2s;
 }
 
 .btn-item-card:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .btn-item-card:not(:disabled):hover {
-    animation: pulse 2s infinite;
+  animation: pulse 2s infinite;
 }
 
 .item-card-name {
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    line-height: 1.2;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .item-card-qty {
-    font-size: 18px;
-    font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 700;
 }
 
 .item-card-qty--empty {
-    color: #888;
+  color: #888;
 }
 
 .items-back {
-    margin-top: 10px;
-    width: 100%;
+  margin-top: 0.625rem;
+  width: 100%;
 }
 
 .items-empty {
-    color: white;
-    font-family: Nunito;
-    font-size: 14px;
-    text-align: center;
-    margin: 16px 0;
-    opacity: 0.6;
-    grid-column: 1 / -1;
+  color: white;
+  font-family: Nunito;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: 1rem 0;
+  opacity: 0.6;
+  grid-column: 1 / -1;
 }
 
-
 @media (max-width: 1024px) {
-    .btn {
-        width: 200px;
-        height: 60px;
-        font-size: 18px;
-        padding-left: 16px;
-        border-radius: 20px;
-        border-width: 4px;
-    }
+  .btn {
+    width: 12.5rem;
+    height: 3.75rem;
+    font-size: 1.125rem;
+    padding-left: 1rem;
+    border-radius: 1.25rem;
+    border-width: 0.25rem;
+  }
 
-    .btn-wrapper {
-        margin: 12px;
-    }
+  .btn-wrapper {
+    margin: 0.75rem;
+  }
 
-    .items-panel {
-        width: 200px;
-    }
+  .items-panel {
+    width: 12.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .btn {
+    width: 10.5rem;
+    height: 3.25rem;
+    font-size: 1rem;
+    border-radius: 1rem;
+    border-width: 3px;
+  }
+
+  .items-panel {
+    width: 10.5rem;
+  }
 }
 
 @keyframes pulse {
-    0% {
-      transform: scale(0.95);
-      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
-    }
-
-    70% {
-      transform: scale(1);
-      box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-    }
-
-    100% {
-      transform: scale(0.95);
-      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-    }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
   }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}

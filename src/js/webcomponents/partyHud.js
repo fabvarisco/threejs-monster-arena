@@ -1,13 +1,19 @@
 class PartyHud extends HTMLElement {
-  static get observedAttributes() { return ["party", "active", "disabled"]; }
+  static get observedAttributes() {
+    return ["party", "active", "disabled"];
+  }
 
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
   }
 
-  connectedCallback() { this._render(); }
-  attributeChangedCallback() { this._render(); }
+  connectedCallback() {
+    this._render();
+  }
+  attributeChangedCallback() {
+    this._render();
+  }
 
   _render() {
     const party = JSON.parse(this.getAttribute("party") ?? "[]");
@@ -17,11 +23,11 @@ class PartyHud extends HTMLElement {
       <style>
         :host {
           position: fixed;
-          bottom: 20px;
+          bottom: 1.25rem;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          gap: 16px;
+          gap: 1rem;
           align-items: flex-end;
           z-index: 20;
           font-family: 'Nunito', sans-serif;
@@ -53,15 +59,15 @@ class PartyHud extends HTMLElement {
         }
 
         .ball.active {
-          width: 72px;
-          height: 72px;
+          width: 4.5rem;
+          height: 4.5rem;
           cursor: default;
           box-shadow: 0 0 0 3px white, 0 0 20px rgba(255, 255, 255, 0.65);
         }
 
         .ball.bench {
-          width: 60px;
-          height: 60px;
+          width: 3.75rem;
+          height: 3.75rem;
           cursor: pointer;
           transition: transform 0.18s, box-shadow 0.18s;
         }
@@ -78,28 +84,28 @@ class PartyHud extends HTMLElement {
         }
 
         .ball.fainted {
-          width: 60px;
-          height: 60px;
+          width: 3.75rem;
+          height: 3.75rem;
           filter: grayscale(1);
           opacity: 0.3;
           cursor: default;
         }
 
         .ball.empty {
-          width: 60px;
-          height: 60px;
+          width: 3.75rem;
+          height: 3.75rem;
           background: linear-gradient(to bottom, #555 50%, #888 50%);
           opacity: 0.35;
           cursor: default;
         }
 
         .name {
-          font-size: 11px;
+          font-size: 0.6875rem;
           font-weight: 700;
           color: white;
           text-transform: capitalize;
           text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-          max-width: 72px;
+          max-width: 4.5rem;
           text-align: center;
           white-space: nowrap;
           overflow: hidden;
@@ -116,35 +122,56 @@ class PartyHud extends HTMLElement {
 
         @media (max-width: 1024px) {
           :host {
-            gap: 10px;
-            bottom: 12px;
+            gap: 0.625rem;
+            bottom: 0.75rem;
           }
           .ball.active {
-            width: 56px;
-            height: 56px;
+            width: 3.5rem;
+            height: 3.5rem;
           }
           .ball.bench,
           .ball.fainted,
           .ball.empty {
-            width: 48px;
-            height: 48px;
+            width: 3rem;
+            height: 3rem;
           }
           .name {
-            font-size: 10px;
-            max-width: 56px;
+            font-size: 0.625rem;
+            max-width: 3.5rem;
+          }
+        }
+
+        @media (max-width: 600px) {
+          :host {
+            bottom: 0.5rem;
+          }
+          .ball.active {
+            width: 3rem;
+            height: 3rem;
+          }
+          .ball.bench,
+          .ball.fainted,
+          .ball.empty {
+            width: 2.5rem;
+            height: 2.5rem;
+          }
+          .name {
+            max-width: 3rem;
           }
         }
       </style>
 
-      ${[0, 1, 2].map(i => this._slot(party[i] ?? null, i === activeIdx, i)).join("")}
+      ${[0, 1, 2].map((i) => this._slot(party[i] ?? null, i === activeIdx, i)).join("")}
     `;
 
     if (!this.hasAttribute("disabled")) {
-      this.shadowRoot.querySelectorAll(".ball.bench").forEach(ball => {
+      this.shadowRoot.querySelectorAll(".ball.bench").forEach((ball) => {
         ball.addEventListener("click", () => {
-          document.dispatchEvent(new CustomEvent("switchMonster", {
-            detail: { to: parseInt(ball.dataset.idx, 10) },
-          }));
+          document.dispatchEvent(
+            new CustomEvent("switchMonster", {
+              detail: { to: parseInt(ball.dataset.idx, 10) },
+            })
+          );
         });
       });
     }
